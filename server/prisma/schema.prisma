@@ -6,3 +6,85 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
+model Car {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  description      String
+  price            Float
+  carType          String
+  images           String[]
+  tankCapacity     Int
+  gearbox          Gearbox
+  seats            Int
+  reviews          Review[]
+  reservations     Reservation[]
+  favouritesList   FavouritesList? @relation(fields: [favouritesListId], references: [id], onDelete: SetNull)
+  favouritesListId String?         @db.ObjectId
+  createdAt        DateTime        @default(now())
+}
+
+enum Gearbox {
+  MANUAL
+  AUTOMATIC
+}
+
+model Reservation {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  startDate     DateTime
+  endDate       DateTime
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String     @db.ObjectId
+  car           Car        @relation(fields: [carId], references: [id], onDelete: Cascade)
+  carId         String     @db.ObjectId
+  billingInfo   BilingInfo @relation(fields: [billingInfoId], references: [id], onDelete: Cascade)
+  billingInfoId String     @db.ObjectId
+  createdAt     DateTime   @default(now())
+}
+
+model User {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  email          String          @unique
+  firstName      String
+  lastName       String
+  password       String
+  role           Role
+  reservations   Reservation[]
+  reviews        Review[]
+  favouritesList FavouritesList?
+  createdAt      DateTime        @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model BilingInfo {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  phoneNumber String
+  address     String
+  city        String
+  reservation Reservation[]
+  createdAt   DateTime      @default(now())
+}
+
+model FavouritesList {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique @db.ObjectId
+  cars      Car[]
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  rating      Int
+  car         Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  carId       String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  createdAt   DateTime @default(now())
+}
