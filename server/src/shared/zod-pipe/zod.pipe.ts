@@ -29,5 +29,8 @@ export class ZodPipe implements PipeTransform {
 
       throw new BadRequestException(details);
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return output.data;
   }
 }
