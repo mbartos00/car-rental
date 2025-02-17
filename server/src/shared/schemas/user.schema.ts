@@ -18,11 +18,17 @@ const passwordSchema = z
     message: 'Password should have at least one special character',
   });
 
-const userSchema = z
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: passwordSchema,
+});
+
+export const userSchema = z
   .object({
     firstName: z.string().min(2),
     lastName: z.string().min(2),
     email: z.string().email(),
+    avatar: z.string(),
     password: passwordSchema,
     repeatPassword: passwordSchema,
     role: z.enum([Role.ADMIN, Role.USER]).default(Role.USER),
@@ -37,4 +43,56 @@ const userSchema = z
     }
   });
 
-export default userSchema;
+export const updateUserSchema = z
+  .object({
+    firstName: z.string().min(2).optional(),
+    lastName: z.string().min(2).optional(),
+    email: z.string().email().optional(),
+    avatar: z.string().optional(),
+    oldPassword: passwordSchema.optional(),
+    password: passwordSchema.optional(),
+    repeatPassword: passwordSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    const hasNonAvatarField = [
+      'firstName',
+      'lastName',
+      'email',
+      'password',
+      'oldPassword',
+      'repeatPassword',
+    ].some((field) => data[field] !== undefined);
+
+    if (!hasNonAvatarField && !data.avatar) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'At least one field must be provided for update',
+        path: [],
+      });
+    }
+
+    if (data.oldPassword && (!data.password || !data.repeatPassword)) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'Please provide old password, new password, and repeat password',
+        path: ['oldPassword', 'password', 'repeatPassword'],
+      });
+    }
+
+    if (data.password && data.repeatPassword === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Please repeat password',
+        path: ['repeatPassword'],
+      });
+    }
+
+    if (data.repeatPassword && data.password !== data.repeatPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'The passwords did not match',
+        path: ['password', 'repeatPassword'],
+      });
+    }
+  });
