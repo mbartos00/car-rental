@@ -28,7 +28,6 @@ export const userSchema = z
     firstName: z.string().min(2),
     lastName: z.string().min(2),
     email: z.string().email(),
-    avatar: z.string(),
     password: passwordSchema,
     repeatPassword: passwordSchema,
     role: z.enum([Role.ADMIN, Role.USER]).default(Role.USER),
@@ -48,29 +47,11 @@ export const updateUserSchema = z
     firstName: z.string().min(2).optional(),
     lastName: z.string().min(2).optional(),
     email: z.string().email().optional(),
-    avatar: z.string().optional(),
     oldPassword: passwordSchema.optional(),
     password: passwordSchema.optional(),
     repeatPassword: passwordSchema.optional(),
   })
   .superRefine((data, ctx) => {
-    const hasNonAvatarField = [
-      'firstName',
-      'lastName',
-      'email',
-      'password',
-      'oldPassword',
-      'repeatPassword',
-    ].some((field) => data[field] !== undefined);
-
-    if (!hasNonAvatarField && !data.avatar) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'At least one field must be provided for update',
-        path: [],
-      });
-    }
-
     if (data.oldPassword && (!data.password || !data.repeatPassword)) {
       ctx.addIssue({
         code: 'custom',
