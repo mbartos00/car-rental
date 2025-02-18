@@ -50,7 +50,7 @@ model User {
   password       String
   role           Role
   reservations   Reservation[]
-  avatar         String
+  avatar         String?
   reviews        Review[]
   favouritesList FavouritesList?
   createdAt      DateTime        @default(now())
