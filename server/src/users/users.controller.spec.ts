@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@prisma/client';
@@ -5,13 +6,29 @@ import { ValidUpdatedUser, ValidUser } from 'src/shared/types';
 import { ZodPipe } from 'src/shared/zod-pipe/zod.pipe';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { BadRequestException } from '@nestjs/common';
 
 describe('UsersController', () => {
   let controller: UsersController;
   let usersService: any;
+  let mockUser: ValidUser;
+  let mockUpdateUser: ValidUpdatedUser;
 
   beforeEach(async () => {
+    mockUser = {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'test@example.com',
+      password: 'password123',
+      repeatPassword: 'password123',
+      role: Role.USER,
+    };
+
+    mockUpdateUser = {
+      firstName: 'John',
+      lastName: 'asd',
+      email: 'update@example.com',
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
@@ -47,59 +64,25 @@ describe('UsersController', () => {
   });
 
   describe('create', () => {
-    const mockUser: ValidUser = {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'test@example.com',
-      password: 'password123',
-      repeatPassword: 'password123',
-      role: Role.USER,
-    };
-
-    it('should create a new user with avatar', async () => {
-      const mockFile = {
-        filename: 'test-avatar.jpg',
-      } as Express.Multer.File;
-
+    it('should create a new user', async () => {
       usersService.create.mockResolvedValue(mockUser);
 
-      const result = await controller.create(mockUser, mockFile);
+      const result = await controller.create(mockUser);
 
       expect(result).toEqual(mockUser);
-      expect(usersService.create).toHaveBeenCalledWith(
-        {
-          firstName: mockUser.firstName,
-          lastName: mockUser.lastName,
-          email: mockUser.email,
-          password: mockUser.password,
-          role: mockUser.role,
-        },
-        mockFile.filename,
-      );
-    });
-
-    it('should create a new user without avatar', async () => {
-      usersService.create.mockResolvedValue(mockUser);
-
-      const result = await controller.create(mockUser, undefined);
-
-      expect(result).toEqual(mockUser);
-      expect(usersService.create).toHaveBeenCalledWith(
-        {
-          firstName: mockUser.firstName,
-          lastName: mockUser.lastName,
-          email: mockUser.email,
-          password: mockUser.password,
-          role: mockUser.role,
-        },
-        undefined,
-      );
+      expect(usersService.create).toHaveBeenCalledWith({
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName,
+        email: mockUser.email,
+        password: mockUser.password,
+        role: mockUser.role,
+      });
     });
 
     it('should throw a BadRequestException when user exists', async () => {
       usersService.findOneByEmail = jest.fn().mockResolvedValue(mockUser);
 
-      await expect(controller.create(mockUser, undefined)).rejects.toThrow(
+      await expect(controller.create(mockUser)).rejects.toThrow(
         BadRequestException,
       );
 
@@ -110,20 +93,7 @@ describe('UsersController', () => {
 
   describe('findAll', () => {
     it('should return all users', async () => {
-      const mockUsers = [
-        {
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'test1@example.com',
-          role: Role.USER,
-        },
-        {
-          firstName: 'Jane',
-          lastName: 'Smith',
-          email: 'test2@example.com',
-          role: Role.ADMIN,
-        },
-      ];
+      const mockUsers = [mockUser, mockUser];
 
       usersService.getAllUsers.mockResolvedValue(mockUsers);
 
@@ -136,13 +106,6 @@ describe('UsersController', () => {
 
   describe('findOne', () => {
     it('should find user by email', async () => {
-      const mockUser = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'test@example.com',
-        role: Role.USER,
-      };
-
       usersService.findOneByEmail.mockResolvedValue(mockUser);
 
       const result = await controller.findOne('test@example.com');
@@ -155,63 +118,24 @@ describe('UsersController', () => {
   });
 
   describe('update', () => {
-    const mockId = '1';
-    const mockUser: ValidUpdatedUser = {
-      firstName: 'Updated',
-      lastName: 'Name',
-      email: 'updated@example.com',
-      repeatPassword: 'new-password',
-      oldPassword: 'old-password',
-    };
+    it('should update user', async () => {
+      const mockId = '1';
+      usersService.update.mockResolvedValue(mockUpdateUser);
 
-    it('should update user with avatar', async () => {
-      const mockFile = {
-        filename: 'updated-avatar.jpg',
-      } as Express.Multer.File;
-
-      usersService.update.mockResolvedValue(mockUser);
-
-      const result = await controller.update(mockId, mockUser, mockFile);
+      const result = await controller.update(mockId, mockUpdateUser);
 
       expect(result).toEqual({ message: 'User updated' });
-      expect(usersService.update).toHaveBeenCalledWith(
-        mockId,
-        {
-          firstName: mockUser.firstName,
-          lastName: mockUser.lastName,
-          email: mockUser.email,
-        },
-        mockFile.filename,
-      );
-    });
-
-    it('should update user without avatar', async () => {
-      usersService.update.mockResolvedValue(mockUser);
-
-      const result = await controller.update(mockId, mockUser, undefined);
-
-      expect(result).toEqual({ message: 'User updated' });
-      expect(usersService.update).toHaveBeenCalledWith(
-        mockId,
-        {
-          firstName: mockUser.firstName,
-          lastName: mockUser.lastName,
-          email: mockUser.email,
-        },
-        undefined,
-      );
+      expect(usersService.update).toHaveBeenCalledWith(mockId, {
+        firstName: mockUpdateUser.firstName,
+        lastName: mockUpdateUser.lastName,
+        email: mockUpdateUser.email,
+      });
     });
   });
 
   describe('remove', () => {
     it('should remove user successfully', async () => {
       const mockId = '1';
-      const mockUser = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'test@example.com',
-        role: Role.USER,
-      };
 
       usersService.remove.mockResolvedValue(mockUser);
 

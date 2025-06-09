@@ -7,19 +7,9 @@ import { UserWithoutPassword } from 'src/shared/types';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    userPayload: Prisma.UserCreateInput,
-    avatarName: string | undefined,
-  ) {
-    const avatar = avatarName
-      ? `${process.env.DOMAIN}/${avatarName}`
-      : undefined;
-
+  async create(userPayload: Prisma.UserCreateInput) {
     return await this.prisma.user.create({
-      data: {
-        ...userPayload,
-        avatar,
-      },
+      data: { ...userPayload },
       omit: { password: true },
     });
   }
@@ -51,21 +41,10 @@ export class UsersService {
     return user;
   }
 
-  async update(
-    id: string,
-    updateUserPayload: Prisma.UserUpdateInput,
-    avatarName: string | undefined,
-  ) {
-    const avatar = avatarName
-      ? `${process.env.DOMAIN}/${avatarName}`
-      : undefined;
-
+  async update(id: string, updateUserPayload: Prisma.UserUpdateInput) {
     return this.prisma.user.update({
       where: { id },
-      data: {
-        ...updateUserPayload,
-        avatar,
-      },
+      data: { ...updateUserPayload },
       omit: { password: true },
     });
   }
