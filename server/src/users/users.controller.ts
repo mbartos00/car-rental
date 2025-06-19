@@ -7,16 +7,23 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { updateUserSchema, userSchema } from 'src/shared/schemas/user.schema';
 import { ValidUpdatedUser, ValidUser } from 'src/shared/types';
 import { ZodPipe } from 'src/shared/zod-pipe/zod.pipe';
 import { UsersService } from './users.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Role } from '@prisma/client';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Post('create')
   async create(@Body(new ZodPipe(userSchema)) user: ValidUser) {
     const existingUser = await this.usersService.findOneByEmail(user.email);
