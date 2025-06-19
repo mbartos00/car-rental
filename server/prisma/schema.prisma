@@ -12,7 +12,7 @@ model Car {
   name             String
   description      String
   price            Float
-  carType          String
+  carType          CarType
   images           String[]
   tankCapacity     Int
   gearbox          Gearbox
@@ -22,6 +22,14 @@ model Car {
   favouritesList   FavouritesList? @relation(fields: [favouritesListId], references: [id], onDelete: SetNull)
   favouritesListId String?         @db.ObjectId
   createdAt        DateTime        @default(now())
+}
+
+enum CarType {
+  SEDAN
+  SUV
+  CONVERTIBLE
+  COUPE
+  HATCHBACK
 }
 
 enum Gearbox {
