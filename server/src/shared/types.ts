@@ -5,6 +5,7 @@ import {
   updateUserSchema,
   userSchema,
 } from './schemas/user.schema';
+import { carSchema, updateCarSchema } from './schemas/cars.schema';
 
 declare module 'express' {
   interface Request {
@@ -30,3 +31,6 @@ export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
 };
+
+export type CarInput = z.infer<typeof carSchema>;
+export type CarUpdateInput = z.infer<typeof updateCarSchema>;
