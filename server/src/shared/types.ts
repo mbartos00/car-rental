@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { z } from 'zod';
 import {
   loginSchema,
@@ -34,3 +34,5 @@ export type AuthTokens = {
 
 export type CarInput = z.infer<typeof carSchema>;
 export type CarUpdateInput = z.infer<typeof updateCarSchema>;
+
+export type PrismaError = Prisma.PrismaClientKnownRequestError;
