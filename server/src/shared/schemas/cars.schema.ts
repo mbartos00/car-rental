@@ -6,7 +6,6 @@ const priceValidation = z
   .positive()
   .superRefine((price, ctx) => {
     const splitted = price.toString().split('.');
-    console.log(splitted);
     if (splitted.length > 1 && splitted[1].length > 2)
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
