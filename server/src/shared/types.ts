@@ -1,4 +1,4 @@
-import { Prisma, User } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { z } from 'zod';
 import {
   carQuerySchema,
@@ -10,6 +10,7 @@ import {
   updateUserSchema,
   userSchema,
 } from './schemas/user.schema';
+import { addToFavouritesSchema } from './schemas/favourites.schema';
 
 declare module 'express' {
   interface Request {
@@ -29,6 +30,12 @@ export type JwtPayload = {
   role: string;
   iat?: number;
   exp?: number;
+};
+
+export type JwtUser = {
+  id: string;
+  email: string;
+  role: Role;
 };
 
 export type AuthTokens = {
@@ -52,5 +59,7 @@ export enum CarQueryParam {
   max_tank_capacity = 'max_tank_capacity',
   search = 'search',
 }
+
+export type AddToFavouritesSchema = z.infer<typeof addToFavouritesSchema>;
 
 export type PrismaError = Prisma.PrismaClientKnownRequestError;
