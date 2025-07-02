@@ -43,7 +43,12 @@ describe('UsersService', () => {
 
       expect(result).toEqual(mockUser);
       expect(prismaMock.user.create).toHaveBeenCalledWith({
-        data: { ...mockUser },
+        data: {
+          ...mockUser,
+          favouritesList: {
+            create: {},
+          },
+        },
         omit: { password: true },
       });
     });
