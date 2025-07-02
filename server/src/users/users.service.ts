@@ -9,7 +9,12 @@ export class UsersService {
 
   async create(userPayload: Prisma.UserCreateInput) {
     return await this.prisma.user.create({
-      data: { ...userPayload },
+      data: {
+        ...userPayload,
+        favouritesList: {
+          create: {},
+        },
+      },
       omit: { password: true },
     });
   }
