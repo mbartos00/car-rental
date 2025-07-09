@@ -6,6 +6,7 @@ import { PrismaModule } from './db/prisma.module';
 import { UsersModule } from './users/users.module';
 import { CarsModule } from './cars/cars.module';
 import { FavouritesModule } from './favourites/favourites.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { FavouritesModule } from './favourites/favourites.module';
     PrismaModule,
     CarsModule,
     FavouritesModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
