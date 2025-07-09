@@ -11,6 +11,7 @@ import {
   userSchema,
 } from './schemas/user.schema';
 import { addToFavouritesSchema } from './schemas/favourites.schema';
+import { reviewSchema, updateReviewSchema } from './schemas/reviews.schema';
 
 declare module 'express' {
   interface Request {
@@ -61,5 +62,8 @@ export enum CarQueryParam {
 }
 
 export type AddToFavouritesSchema = z.infer<typeof addToFavouritesSchema>;
+
+export type ReviewSchema = z.infer<typeof reviewSchema>;
+export type UpdateReviewSchema = z.infer<typeof updateReviewSchema>;
 
 export type PrismaError = Prisma.PrismaClientKnownRequestError;
