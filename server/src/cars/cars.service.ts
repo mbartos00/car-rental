@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/db/prisma.service';
-import { CarQuerySchema, PrismaError } from 'src/shared/types';
+import { CarQuerySchema } from 'src/shared/types';
 import {
   buildPaginatedResponse,
   buildPagination,
@@ -36,6 +36,9 @@ export class CarsService {
               id: true,
               rating: true,
             },
+            omit: {
+              userId: true,
+            },
           },
         },
       }),
@@ -49,7 +52,11 @@ export class CarsService {
     const car = await this.prismaService.car.findUnique({
       where: { id },
       include: {
-        reviews: true,
+        reviews: {
+          omit: {
+            userId: true,
+          },
+        },
       },
     });
 
@@ -61,29 +68,31 @@ export class CarsService {
   }
 
   async update(id: string, carUpdatePayload: Prisma.CarUpdateInput) {
-    try {
+    return this.prismaService.$transaction(async (prisma) => {
+      const car = await prisma.car.findUnique({ where: { id } });
+
+      if (!car) {
+        throw new NotFoundException('Car not found');
+      }
+
       return await this.prismaService.car.update({
         where: { id },
         data: carUpdatePayload,
       });
-    } catch (error: any) {
-      if ((error as PrismaError).code === 'P2025') {
-        throw new NotFoundException('Car not found');
-      }
-      throw error;
-    }
+    });
   }
 
   async remove(id: string) {
-    try {
+    return this.prismaService.$transaction(async (prisma) => {
+      const car = await prisma.car.findUnique({ where: { id } });
+
+      if (!car) {
+        throw new NotFoundException('Car not found');
+      }
+
       return await this.prismaService.car.delete({
         where: { id },
       });
-    } catch (error: any) {
-      if ((error as PrismaError).code === 'P2025') {
-        throw new NotFoundException('Car not found');
-      }
-      throw error;
-    }
+    });
   }
 }

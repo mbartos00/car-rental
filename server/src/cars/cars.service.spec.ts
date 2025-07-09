@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Car, CarType, Gearbox, PrismaClient, Review } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from 'src/db/prisma.service';
-import { CarQuerySchema, PrismaError } from 'src/shared/types';
+import { CarQuerySchema } from 'src/shared/types';
 import * as paginationUtils from 'src/shared/utils/pagination';
 import { CarsService } from './cars.service';
 import * as carFilterUtils from './utils/car-filter-builder';
@@ -170,6 +170,9 @@ describe('CarsService', () => {
               id: true,
               rating: true,
             },
+            omit: {
+              userId: true,
+            },
           },
         },
       });
@@ -223,7 +226,11 @@ describe('CarsService', () => {
       expect(prismaMock.car.findUnique).toHaveBeenCalledWith({
         where: { id: '1' },
         include: {
-          reviews: true,
+          reviews: {
+            omit: {
+              userId: true,
+            },
+          },
         },
       });
     });
@@ -247,8 +254,16 @@ describe('CarsService', () => {
       seats: 7,
     };
 
-    it('should update car successfully', async () => {
+    it('should update car successfully inside transaction', async () => {
       const updatedCar = { ...mockCar, ...updatePayload };
+
+      prismaMock.$transaction.mockImplementation(async (cb) => {
+        return cb({
+          car: {
+            findUnique: jest.fn().mockResolvedValue(mockCar),
+          },
+        } as any);
+      });
       prismaMock.car.update.mockResolvedValue(updatedCar);
 
       const result = await carsService.update('1', updatePayload);
@@ -260,14 +275,14 @@ describe('CarsService', () => {
       });
     });
 
-    it('should throw NotFoundException when car not found (P2025 error)', async () => {
-      const prismaError: Partial<PrismaError> = {
-        code: 'P2025',
-        message: 'Record not found',
-        name: 'PrismaClientKnownRequestError',
-      };
-
-      prismaMock.car.update.mockRejectedValue(prismaError);
+    it('should throw NotFoundException when car not found in transaction', async () => {
+      prismaMock.$transaction.mockImplementation(async (cb) => {
+        return cb({
+          car: {
+            findUnique: jest.fn().mockResolvedValue(null),
+          },
+        } as any);
+      });
 
       await expect(
         carsService.update('nonexistent-id', updatePayload),
@@ -276,19 +291,17 @@ describe('CarsService', () => {
         carsService.update('nonexistent-id', updatePayload),
       ).rejects.toThrow('Car not found');
     });
-
-    it('should rethrow other errors', async () => {
-      const otherError = new Error('Database connection failed');
-      prismaMock.car.update.mockRejectedValue(otherError);
-
-      await expect(carsService.update('1', updatePayload)).rejects.toThrow(
-        'Database connection failed',
-      );
-    });
   });
 
   describe('remove', () => {
-    it('should delete car successfully', async () => {
+    it('should delete car successfully inside transaction', async () => {
+      prismaMock.$transaction.mockImplementation(async (cb) => {
+        return cb({
+          car: {
+            findUnique: jest.fn().mockResolvedValue(mockCar),
+          },
+        } as any);
+      });
       prismaMock.car.delete.mockResolvedValue(mockCar);
 
       const result = await carsService.remove('1');
@@ -299,30 +312,20 @@ describe('CarsService', () => {
       });
     });
 
-    it('should throw NotFoundException with correct message when car not found (P2025 error)', async () => {
-      const prismaError: Partial<PrismaError> = {
-        code: 'P2025',
-        message: 'Record not found',
-        name: 'PrismaClientKnownRequestError',
-      };
-
-      prismaMock.car.delete.mockRejectedValue(prismaError);
+    it('should throw NotFoundException when car not found in transaction', async () => {
+      prismaMock.$transaction.mockImplementation(async (cb) => {
+        return cb({
+          car: {
+            findUnique: jest.fn().mockResolvedValue(null),
+          },
+        } as any);
+      });
 
       await expect(carsService.remove('nonexistent-id')).rejects.toThrow(
         NotFoundException,
       );
-
       await expect(carsService.remove('nonexistent-id')).rejects.toThrow(
         'Car not found',
-      );
-    });
-
-    it('should rethrow other errors', async () => {
-      const otherError = new Error('Foreign key constraint failed');
-      prismaMock.car.delete.mockRejectedValue(otherError);
-
-      await expect(carsService.remove('1')).rejects.toThrow(
-        'Foreign key constraint failed',
       );
     });
   });
