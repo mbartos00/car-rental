@@ -20,7 +20,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${plusJakarta.className} antialiased`}>{children}</body>
+      <body
+        className={`${plusJakarta.className} antialiased bg-primary-100/25`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
