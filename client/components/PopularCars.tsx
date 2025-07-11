@@ -17,7 +17,7 @@ const PopularCars = () => {
           View All
         </Link>
       </div>
-      <Carousel className="w-full">
+      <Carousel className="w-full" autoplay={true} autoplayInterval={4000}>
         <CarouselContent className="-ml-6">
           {cars.map(
             (
