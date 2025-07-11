@@ -9,11 +9,11 @@ import {
 } from "./ui/card";
 import { Button } from "./ui/button";
 import { Fuel, Heart, LifeBuoy, User } from "lucide-react";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 import { cn, toTitleCase } from "@/lib/utils";
 
 type Props = {
-  carImage: string;
+  carImage: StaticImageData;
   title: string;
   type: string;
   price: number;
@@ -68,11 +68,11 @@ const CarCard = ({
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-col lg:flex-row gap-5">
+      <CardContent className="flex flex-col gap-5">
         <div className="relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-1/2 after:bg-gradient-to-t after:from-white after:to-transparent after:pointer-events-none after:z-10 max-w-xl mx-auto">
           <Image src={carImage} alt={`${title} image`} />
         </div>
-        <div className="flex lg:flex-col justify-center gap-4 text-xs font-medium *:flex *:items-center *:gap-1 *:text-secondary-300 lg:text-sm lg:*:gap-2">
+        <div className="flex flex-wrap justify-center gap-4 text-xs font-medium *:flex *:gap-1 *:items-center *:text-secondary-300 lg:text-sm lg:*:gap-2">
           <p>
             <span>
               <Fuel />
@@ -93,7 +93,7 @@ const CarCard = ({
           </p>
         </div>
       </CardContent>
-      <CardFooter className="justify-between">
+      <CardFooter className="justify-between gap-2 flex-wrap">
         <p className="text-secondary-500 font-bold">
           {formattedPrice}/
           <span className="text-xs text-secondary-300">day</span>
