@@ -46,6 +46,11 @@ export class CarsController {
     return await this.carsService.findAll(query);
   }
 
+  @Get('filters')
+  async getFilters() {
+    return await this.carsService.getCarFilters();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const car = await this.carsService.findOne(id);

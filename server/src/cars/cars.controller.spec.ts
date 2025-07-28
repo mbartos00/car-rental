@@ -287,4 +287,29 @@ describe('CarsController', () => {
       expect(carsService.remove).toHaveBeenCalledWith(carId);
     });
   });
+
+  describe('getFilters', () => {
+    it('should return car filter metadata', async () => {
+      const mockFilters = {
+        price: { min: 10000, max: 50000 },
+        tankCapacity: { min: 40, max: 70 },
+        carType: [
+          { carType: CarType.SEDAN, _count: 10 },
+          { carType: CarType.SUV, _count: 5 },
+        ],
+        gearbox: [
+          { gearbox: Gearbox.AUTOMATIC, _count: 12 },
+          { gearbox: Gearbox.MANUAL, _count: 3 },
+        ],
+        seats: [2, 5, 7],
+      };
+
+      carsService.getCarFilters = jest.fn().mockResolvedValue(mockFilters);
+
+      const result = await controller.getFilters();
+
+      expect(result).toEqual(mockFilters);
+      expect(carsService.getCarFilters).toHaveBeenCalled();
+    });
+  });
 });

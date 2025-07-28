@@ -30,17 +30,6 @@ export class CarsService {
         where,
         orderBy,
         ...pagination,
-        include: {
-          reviews: {
-            select: {
-              id: true,
-              rating: true,
-            },
-            omit: {
-              userId: true,
-            },
-          },
-        },
       }),
       this.prismaService.car.count({ where }),
     ]);
@@ -94,5 +83,48 @@ export class CarsService {
         where: { id },
       });
     });
+  }
+
+  async getCarFilters() {
+    const priceAndTankCapacity = await this.prismaService.car.aggregate({
+      _min: {
+        price: true,
+        tankCapacity: true,
+      },
+      _max: {
+        price: true,
+        tankCapacity: true,
+      },
+    });
+
+    const [carType, gearbox, seats] = await this.prismaService.$transaction(
+      async (prisma) => [
+        await prisma.car.groupBy({
+          by: ['carType'],
+          _count: true,
+        }),
+        await prisma.car.groupBy({
+          by: ['gearbox'],
+          _count: true,
+        }),
+        await prisma.car.groupBy({
+          by: ['seats'],
+        }),
+      ],
+    );
+
+    return {
+      price: {
+        min: priceAndTankCapacity._min.price,
+        max: priceAndTankCapacity._max.price,
+      },
+      tankCapacity: {
+        min: priceAndTankCapacity._min.tankCapacity,
+        max: priceAndTankCapacity._max.tankCapacity,
+      },
+      carType,
+      gearbox,
+      seats: seats.map((item) => item.seats).sort(),
+    };
   }
 }

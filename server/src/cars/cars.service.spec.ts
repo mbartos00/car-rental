@@ -1,6 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Car, CarType, Gearbox, PrismaClient, Review } from '@prisma/client';
+import {
+  Car,
+  CarType,
+  Gearbox,
+  Prisma,
+  PrismaClient,
+  Review,
+} from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from 'src/db/prisma.service';
 import { CarQuerySchema } from 'src/shared/types';
@@ -111,7 +118,7 @@ describe('CarsService', () => {
     const mockOrderBy = { price: 'asc' };
     const mockPagination = { skip: 0, take: 10 };
     const mockPaginatedResponse = {
-      data: [mockCarWithReviews],
+      data: [mockCar],
       meta: {
         total: 1,
         page: 1,
@@ -135,18 +142,8 @@ describe('CarsService', () => {
       );
     });
 
-    it('should return paginated cars with reviews', async () => {
-      const carsWithReviewsSelection = [
-        {
-          ...mockCar,
-          reviews: [
-            { id: '1', rating: 5 },
-            { id: '2', rating: 4 },
-          ],
-        },
-      ];
-
-      prismaMock.car.findMany.mockResolvedValue(carsWithReviewsSelection);
+    it('should return paginated cars', async () => {
+      prismaMock.car.findMany.mockResolvedValue([mockCar]);
       prismaMock.car.count.mockResolvedValue(1);
 
       const result = await carsService.findAll(mockQuery);
@@ -164,22 +161,11 @@ describe('CarsService', () => {
         where: mockFilters,
         orderBy: mockOrderBy,
         ...mockPagination,
-        include: {
-          reviews: {
-            select: {
-              id: true,
-              rating: true,
-            },
-            omit: {
-              userId: true,
-            },
-          },
-        },
       });
       expect(prismaMock.car.count).toHaveBeenCalledWith({ where: mockFilters });
 
       expect(paginationUtils.buildPaginatedResponse).toHaveBeenCalledWith(
-        carsWithReviewsSelection,
+        [mockCar],
         1,
         1,
         10,
@@ -327,6 +313,57 @@ describe('CarsService', () => {
       await expect(carsService.remove('nonexistent-id')).rejects.toThrow(
         'Car not found',
       );
+    });
+  });
+
+  describe('getCarFilters', () => {
+    it('should return filter metadata including price, tankCapacity, carType, gearbox, and seats', async () => {
+      prismaMock.car.aggregate.mockResolvedValue({
+        _min: {
+          price: 10000,
+          tankCapacity: 40,
+        },
+        _max: {
+          price: 50000,
+          tankCapacity: 70,
+        },
+      } as any);
+
+      const mockCarTypes = [
+        { carType: CarType.SUV, _count: 5 },
+        { carType: CarType.SEDAN, _count: 3 },
+      ];
+
+      const mockGearboxes = [
+        { gearbox: Gearbox.AUTOMATIC, _count: 6 },
+        { gearbox: Gearbox.MANUAL, _count: 2 },
+      ];
+
+      const mockSeats = [{ seats: 2 }, { seats: 5 }, { seats: 7 }];
+
+      prismaMock.$transaction.mockImplementation(async (cb: any) =>
+        cb({
+          car: {
+            groupBy: jest
+              .fn()
+              .mockResolvedValueOnce(mockCarTypes)
+              .mockResolvedValueOnce(mockGearboxes)
+              .mockResolvedValueOnce(mockSeats),
+          },
+        } as any),
+      );
+
+      const result = await carsService.getCarFilters();
+
+      expect(prismaMock.car.aggregate).toHaveBeenCalled();
+
+      expect(result).toEqual({
+        price: { min: 10000, max: 50000 },
+        tankCapacity: { min: 40, max: 70 },
+        carType: mockCarTypes,
+        gearbox: mockGearboxes,
+        seats: [2, 5, 7],
+      });
     });
   });
 });
