@@ -48,8 +48,6 @@ export type CarInput = z.infer<typeof carSchema>;
 export type CarUpdateInput = z.infer<typeof updateCarSchema>;
 export type CarQuerySchema = z.infer<typeof carQuerySchema>;
 export enum CarQueryParam {
-  name = 'name',
-  description = 'description',
   min_price = 'min_price',
   max_price = 'max_price',
   car_type = 'car_type',

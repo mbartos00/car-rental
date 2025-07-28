@@ -9,13 +9,6 @@ export function buildCarFilters(
     if (value === undefined) return acc;
 
     switch (key as CarQueryParam) {
-      case CarQueryParam.description:
-        acc.description = {
-          contains: value as string,
-          mode: 'insensitive',
-        };
-        break;
-
       case CarQueryParam.min_price:
         if (typeof acc.price !== 'object') {
           acc.price = {};

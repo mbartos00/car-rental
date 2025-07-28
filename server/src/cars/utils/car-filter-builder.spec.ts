@@ -8,16 +8,14 @@ describe('buildCarFilters', () => {
     expect(result).toEqual({});
   });
 
-  it('should handle description filter with case insensitive search', () => {
-    const queryParams = { [CarQueryParam.description]: 'luxury car' };
+  it('should ignore unknown query parameters', () => {
+    const queryParams = {
+      unknown_param: 'some value',
+    } as any;
+
     const result = buildCarFilters(queryParams);
 
-    expect(result).toEqual({
-      description: {
-        contains: 'luxury car',
-        mode: 'insensitive',
-      },
-    });
+    expect(result).toEqual({});
   });
 
   it('should handle price range filters', () => {
