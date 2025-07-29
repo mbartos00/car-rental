@@ -39,26 +39,8 @@ export function buildCarFilters(
         acc.gearbox = value as Gearbox;
         break;
 
-      case CarQueryParam.min_seats:
-        if (typeof acc.seats !== 'object') {
-          acc.seats = {};
-        }
-
-        acc.seats = {
-          ...acc.seats,
-          gte: value as number,
-        };
-        break;
-
-      case CarQueryParam.max_seats:
-        if (typeof acc.seats !== 'object') {
-          acc.seats = {};
-        }
-
-        acc.seats = {
-          ...acc.seats,
-          lte: value as number,
-        };
+      case CarQueryParam.seats:
+        acc.seats = value as number;
         break;
 
       case CarQueryParam.min_tank_capacity:

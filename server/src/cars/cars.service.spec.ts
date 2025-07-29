@@ -338,8 +338,10 @@ describe('CarsService', () => {
         { gearbox: Gearbox.AUTOMATIC, _count: 6 },
         { gearbox: Gearbox.MANUAL, _count: 2 },
       ];
-
-      const mockSeats = [{ seats: 2 }, { seats: 5 }, { seats: 7 }];
+      const mockSeats = [
+        { seats: 2, _count: 6 },
+        { seats: 4, _count: 2 },
+      ];
 
       prismaMock.$transaction.mockImplementation(async (cb: any) =>
         cb({
@@ -362,7 +364,7 @@ describe('CarsService', () => {
         tankCapacity: { min: 40, max: 70 },
         carType: mockCarTypes,
         gearbox: mockGearboxes,
-        seats: [2, 5, 7],
+        seats: mockSeats,
       });
     });
   });

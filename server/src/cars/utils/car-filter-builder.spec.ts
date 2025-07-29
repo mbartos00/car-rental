@@ -48,16 +48,12 @@ describe('buildCarFilters', () => {
 
   it('should handle seats range filters', () => {
     const queryParams = {
-      [CarQueryParam.min_seats]: 2,
-      [CarQueryParam.max_seats]: 7,
+      [CarQueryParam.seats]: 2,
     };
     const result = buildCarFilters(queryParams);
 
     expect(result).toEqual({
-      seats: {
-        gte: 2,
-        lte: 7,
-      },
+      seats: 2,
     });
   });
 
@@ -93,7 +89,7 @@ describe('buildCarFilters', () => {
       [CarQueryParam.search]: 'Honda',
       [CarQueryParam.min_price]: 15000,
       [CarQueryParam.car_type]: CarType.SEDAN,
-      [CarQueryParam.min_seats]: 4,
+      [CarQueryParam.seats]: 4,
     };
     const result = buildCarFilters(queryParams);
 
@@ -106,9 +102,7 @@ describe('buildCarFilters', () => {
         gte: 15000,
       },
       carType: 'SEDAN',
-      seats: {
-        gte: 4,
-      },
+      seats: 4,
     });
   });
 });

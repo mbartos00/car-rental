@@ -109,6 +109,7 @@ export class CarsService {
         }),
         await prisma.car.groupBy({
           by: ['seats'],
+          _count: true,
         }),
       ],
     );
@@ -124,7 +125,7 @@ export class CarsService {
       },
       carType,
       gearbox,
-      seats: seats.map((item) => item.seats).sort(),
+      seats,
     };
   }
 }

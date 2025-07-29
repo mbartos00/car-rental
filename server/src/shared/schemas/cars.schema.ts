@@ -29,13 +29,11 @@ export const updateCarSchema = carSchema.partial();
 
 export const carQuerySchema = z.object({
   name: z.string().optional(),
-  description: z.string().optional(),
   min_price: z.coerce.number().min(0).optional(),
   max_price: z.coerce.number().min(0).optional(),
   car_type: z.nativeEnum(CarType).optional(),
   gearbox: z.nativeEnum(Gearbox).optional(),
-  min_seats: z.coerce.number().min(1).optional(),
-  max_seats: z.coerce.number().min(1).optional(),
+  seats: z.coerce.number().min(1).optional(),
   min_tank_capacity: z.coerce.number().min(1).optional(),
   max_tank_capacity: z.coerce.number().min(1).optional(),
   sort_by: z
