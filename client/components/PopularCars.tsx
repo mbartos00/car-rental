@@ -18,7 +18,7 @@ const PopularCars = () => {
         </Link>
       </div>
       <Carousel className="w-full" autoplay={true} autoplayInterval={4000}>
-        <CarouselContent className="-ml-6">
+        <CarouselContent className="-ml-6 py-2">
           {cars.map(
             (
               car, //TODO: Replace with logic
@@ -33,9 +33,9 @@ const PopularCars = () => {
                   gearbox={car.gearbox}
                   price={car.price}
                   seats={car.seats}
-                  title={car.name}
+                  name={car.name}
                   tankCapacity={car.tankCapacity}
-                  type={car.carType}
+                  carType={car.carType}
                   key={car.id}
                   isLoggedIn={false}
                   isInFavourites={false}
