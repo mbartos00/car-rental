@@ -1,3 +1,8 @@
+import { cn, formatPriceToUSD, toTitleCase } from "@/lib/utils";
+import { CarType } from "@/types";
+import { Fuel, Heart, LifeBuoy, User } from "lucide-react";
+import Image from "next/image";
+import { Button } from "./ui/button";
 import {
   Card,
   CardAction,
@@ -7,15 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Button } from "./ui/button";
-import { Fuel, Heart, LifeBuoy, User } from "lucide-react";
-import Image, { StaticImageData } from "next/image";
-import { cn, toTitleCase } from "@/lib/utils";
 
 type Props = {
-  carImage: StaticImageData;
-  title: string;
-  type: string;
+  carImage: string;
+  name: string;
+  carType: CarType;
   price: number;
   tankCapacity: number;
   gearbox: string;
@@ -26,8 +27,8 @@ type Props = {
 
 const CarCard = ({
   carImage,
-  title,
-  type,
+  name,
+  carType,
   tankCapacity,
   gearbox,
   seats,
@@ -35,21 +36,16 @@ const CarCard = ({
   isLoggedIn,
   isInFavourites,
 }: Props) => {
-  const formattedPrice = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price || 0);
+  const formattedPrice = formatPriceToUSD(price);
 
   return (
     <Card className="border-none">
       <CardHeader>
         <CardTitle className="text-secondary-500 font-semibold text-base lg:font-bold lg:text-xl">
-          {title}
+          {name}
         </CardTitle>
         <CardDescription className="text-secondary-300 font-medium text-sm">
-          {type}
+          {carType}
         </CardDescription>
         <CardAction>
           <Button
@@ -70,7 +66,12 @@ const CarCard = ({
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         <div className="relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-1/2 after:bg-gradient-to-t after:from-white after:to-transparent after:pointer-events-none after:z-10 max-w-xl mx-auto">
-          <Image src={carImage} alt={`${title} image`} />
+          <Image
+            src={carImage}
+            alt={`${name} image`}
+            width={250}
+            height={100}
+          />
         </div>
         <div className="flex flex-wrap justify-center gap-4 text-xs font-medium *:flex *:gap-1 *:items-center *:text-secondary-300 lg:text-sm lg:*:gap-2">
           <p>
