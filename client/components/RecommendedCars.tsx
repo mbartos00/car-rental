@@ -17,9 +17,9 @@ const RecommendedCars = () => {
             gearbox={car.gearbox}
             price={car.price}
             seats={car.seats}
-            title={car.name}
+            name={car.name}
             tankCapacity={car.tankCapacity}
-            type={car.carType}
+            carType={car.carType}
             key={car.id}
             isLoggedIn={false}
             isInFavourites={false}
