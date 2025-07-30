@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 type Props = {
   carImage: string;
@@ -48,20 +49,30 @@ const CarCard = ({
           {carType}
         </CardDescription>
         <CardAction>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-10 hover:bg-transparent group"
-            disabled={!isLoggedIn}
-          >
-            <Heart
-              className={cn(
-                "size-6 stroke-secondary-300 transition-all group-hover:fill-red-500 group-hover:stroke-0",
-                isInFavourites && "fill-red-500 stroke-0",
-                !isLoggedIn && "stroke-secondary-200 fill-secondary-200"
-              )}
-            />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger className="size-6 hover:bg-transparent group">
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!isLoggedIn}
+                asChild
+                className="size-6 hover:bg-transparent group"
+              >
+                <Heart
+                  className={cn(
+                    "size-6 stroke-secondary-300 transition-all",
+                    isInFavourites && "fill-red-500 stroke-0",
+                    isLoggedIn &&
+                      "group-hover:fill-red-500 group-hover:stroke-0",
+                    !isLoggedIn && "stroke-secondary-100 fill-secondary-100"
+                  )}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isLoggedIn ? "Add to favourites" : "Please log in"}</p>
+            </TooltipContent>
+          </Tooltip>
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
