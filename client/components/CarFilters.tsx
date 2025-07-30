@@ -12,13 +12,13 @@ import {
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn, formatPriceToUSD, toTitleCase } from "@/lib/utils";
 import { CarFilters as CarFiltersType } from "@/types";
-import { Label } from "@radix-ui/react-label";
 import { ListFilterPlus } from "lucide-react";
 import Form from "next/form";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Label } from "./ui/label";
 
 type Props = {
   filters: CarFiltersType;
