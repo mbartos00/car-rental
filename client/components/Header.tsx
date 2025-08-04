@@ -31,7 +31,7 @@ const Header = () => {
             </Button>
           ) : (
             <Button size="sm" asChild>
-              <Link href={"/log-in"}>Log In</Link>
+              <Link href={"/login"}>Log In</Link>
             </Button>
           )}
         </div>

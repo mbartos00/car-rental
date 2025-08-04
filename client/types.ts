@@ -57,3 +57,11 @@ export type Pagination = {
   hasNext: boolean;
   hasPrev: boolean;
 };
+
+export type LoginState = {
+  errors?: {
+    email?: string[];
+    password?: string[];
+  };
+  success?: boolean;
+};
