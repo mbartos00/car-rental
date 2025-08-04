@@ -65,3 +65,14 @@ export type LoginState = {
   };
   success?: boolean;
 };
+
+export type RegisterState = {
+  errors?: {
+    firstName?: string[];
+    lastName?: string[];
+    email?: string[];
+    password?: string[];
+    repeatPassword?: string[];
+  };
+  success?: boolean;
+};

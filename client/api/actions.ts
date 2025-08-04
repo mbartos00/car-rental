@@ -1,26 +1,30 @@
 "use server";
 
-import { loginSchema } from "@/schemas/loginSchema";
-import { LoginState } from "@/types";
-import { z } from "zod";
+import { registerSchema } from "@/schemas/registerSchema";
+import { LoginState, RegisterState } from "@/types";
+import validateFormFields from "@/utlis/validateFormFields";
 
 export const loginFormAction = async (
   _: LoginState,
   formData: FormData
 ): Promise<LoginState> => {
-  const validatedFields = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
+  const errors = validateFormFields(registerSchema, formData);
 
-  if (!validatedFields.success) {
-    const errorTree = z.treeifyError(validatedFields.error);
-    return {
-      errors: {
-        email: errorTree.properties?.email?.errors,
-        password: errorTree.properties?.password?.errors,
-      },
-    };
+  if (errors) {
+    return { errors };
+  }
+
+  return { success: true }; // TODO: Add auth logic
+};
+
+export const registerFormAction = async (
+  _: RegisterState,
+  formData: FormData
+): Promise<RegisterState> => {
+  const errors = validateFormFields(registerSchema, formData);
+
+  if (errors) {
+    return { errors };
   }
 
   return { success: true }; // TODO: Add auth logic
