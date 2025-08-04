@@ -1,4 +1,12 @@
 "use client";
+import { loginFormAction } from "@/api/actions";
+import { LoginState } from "@/types";
+import Form from "next/form";
+import Link from "next/link";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
+import FormFieldInput from "./FormFieldInput";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
@@ -7,16 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { loginFormAction } from "@/api/actions";
-import { useActionState, useEffect } from "react";
-import Link from "next/link";
-import Form from "next/form";
-import { cn } from "@/lib/utils";
-import { LoginState } from "@/types";
-import { toast } from "sonner";
 
 const initialState: LoginState = {
   errors: {
@@ -31,8 +29,6 @@ const LoginForm = () => {
     loginFormAction,
     initialState
   );
-  const emailHasError = state.errors?.email;
-  const passwordHasError = state.errors?.password;
 
   useEffect(() => {
     if (state.success) {
@@ -53,60 +49,22 @@ const LoginForm = () => {
         </CardHeader>
         <CardContent>
           <Form action={formAction} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-secondary-500">
-                Email
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                required
-                className={cn(
-                  "border-secondary-200/40 p-5 placeholder:text-sm placeholder:text-secondary-400 placeholder:font-medium",
-                  emailHasError && "border-r-red-500"
-                )}
-              />
-              <ul>
-                {state?.errors?.email?.map((error) => (
-                  <li
-                    aria-live="polite"
-                    className="text-center text-red-500 text-sm"
-                    key={error}
-                  >
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-secondary-500">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                required
-                className={cn(
-                  "border-secondary-200/40 p-5 placeholder:text-sm placeholder:text-secondary-400 placeholder:font-medium",
-                  passwordHasError && "border-red-500"
-                )}
-              />
-              <ul>
-                {state?.errors?.password?.map((error) => (
-                  <li
-                    aria-live="polite"
-                    className="text-center text-red-500 text-sm"
-                    key={error}
-                  >
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <FormFieldInput
+              label="Email"
+              fieldName="email"
+              placeholder="john.doe@example.com"
+              required
+              type="email"
+              errors={state.errors?.email}
+            />
+            <FormFieldInput
+              label="Password"
+              fieldName="password"
+              placeholder="Enter your password"
+              required
+              type="password"
+              errors={state.errors?.password}
+            />
             <Button className="w-full" type="submit" disabled={pending}>
               {pending ? "Logging in" : "Sign In"}
             </Button>
@@ -116,7 +74,7 @@ const LoginForm = () => {
           <div className="text-center text-sm text-gray-600">
             {"Don't have an account? "}
             <Button variant="link" asChild className="p-0 text-primary-500">
-              <Link href="#">Sign up</Link>
+              <Link href="/register">Sign up</Link>
             </Button>
           </div>
         </CardFooter>
