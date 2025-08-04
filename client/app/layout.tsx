@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Toaster } from "sonner";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -28,6 +29,16 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <Toaster
+          toastOptions={{
+            classNames: {
+              title: "!text-secondary-500",
+              success: "!bg-primary-0",
+            },
+          }}
+          duration={3000}
+          richColors
+        />
       </body>
     </html>
   );
