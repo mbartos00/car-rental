@@ -58,21 +58,50 @@ export type Pagination = {
   hasPrev: boolean;
 };
 
-export type LoginState = {
+export type LoginFormState = {
   errors?: {
     email?: string[];
     password?: string[];
   };
+  error?: ApiErrorResponse;
   success?: boolean;
 };
 
-export type RegisterState = {
-  errors?: {
+export type RegisterFormState = {
+  formErrors?: {
     firstName?: string[];
     lastName?: string[];
     email?: string[];
     password?: string[];
     repeatPassword?: string[];
   };
+  error?: ApiErrorResponse;
   success?: boolean;
+  message?: string;
+};
+
+export type UserInput = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  repeatPassword: string;
+};
+
+export type ApiErrorResponse = {
+  message: string | ZodError;
+  error: string;
+  statusCode: number;
+};
+
+export type ApiResponse<T> = {
+  data?: T;
+  success: boolean;
+  error?: ApiErrorResponse;
+};
+
+export type ZodError = {
+  path: string;
+  message: string;
+  code: string;
 };
