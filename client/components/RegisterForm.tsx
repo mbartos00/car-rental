@@ -9,14 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RegisterState } from "@/types";
+import useToastContext from "@/hooks/useToastContext";
+import { RegisterFormState } from "@/types";
 import Form from "next/form";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import FormFieldInput from "./FormFieldInput";
 
-const initialState: RegisterState = {
-  errors: {
+const initialState: RegisterFormState = {
+  formErrors: {
     firstName: undefined,
     lastName: undefined,
     email: undefined,
@@ -31,6 +32,12 @@ const RegisterForm = () => {
     registerFormAction,
     initialState
   );
+
+  const { handleToast } = useToastContext();
+
+  useEffect(() => {
+    handleToast(state.success, state.error, state?.message);
+  }, [state.success, state.error, state.message, handleToast]);
 
   return (
     <>
@@ -50,14 +57,14 @@ const RegisterForm = () => {
               fieldName="firstName"
               placeholder="John"
               required
-              errors={state.errors?.firstName}
+              errors={state?.formErrors?.firstName}
             />
             <FormFieldInput
               label="Last Name"
               fieldName="lastName"
               placeholder="Doe"
               required
-              errors={state.errors?.lastName}
+              errors={state?.formErrors?.lastName}
             />
             <FormFieldInput
               label="Email"
@@ -65,7 +72,7 @@ const RegisterForm = () => {
               placeholder="john.doe@example.com"
               required
               type="email"
-              errors={state.errors?.email}
+              errors={state?.formErrors?.email}
             />
             <FormFieldInput
               label="Password"
@@ -73,7 +80,7 @@ const RegisterForm = () => {
               placeholder="Enter your password"
               required
               type="password"
-              errors={state.errors?.password}
+              errors={state?.formErrors?.password}
             />
             <FormFieldInput
               label="Repeat password"
@@ -81,7 +88,7 @@ const RegisterForm = () => {
               placeholder="Repeat password"
               required
               type="password"
-              errors={state.errors?.repeatPassword}
+              errors={state?.formErrors?.repeatPassword}
             />
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? "Creating Account..." : "Create Account"}
