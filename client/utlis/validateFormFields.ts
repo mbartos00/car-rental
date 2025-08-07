@@ -1,15 +1,25 @@
 import { type ZodObject, type ZodRawShape, z } from "zod";
 import formDataToObject from "./formDataToObject";
 
-interface ErrorTreeNode {
+type ErrorTreeNode = {
   errors?: string[];
   properties?: Record<string, ErrorTreeNode>;
-}
+};
+
+type ValidationResult<T extends ZodRawShape> =
+  | {
+      errors: Partial<Record<keyof T, string[]>>;
+      data?: undefined;
+    }
+  | {
+      errors?: undefined;
+      data: z.infer<ZodObject<T>>;
+    };
 
 const validateFormFields = <T extends ZodRawShape>(
   schema: ZodObject<T>,
   formData: FormData
-): Partial<Record<keyof T, string[]>> | undefined => {
+): ValidationResult<T> => {
   const validatedFields = schema.safeParse(formDataToObject(formData));
 
   if (!validatedFields.success) {
@@ -24,10 +34,10 @@ const validateFormFields = <T extends ZodRawShape>(
       }
     }
 
-    return errors;
+    return { errors };
   }
 
-  return undefined;
+  return { data: validatedFields.data };
 };
 
 export default validateFormFields;
