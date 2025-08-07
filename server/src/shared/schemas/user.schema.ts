@@ -19,7 +19,7 @@ const passwordSchema = z
   });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: passwordSchema,
 });
 
@@ -27,7 +27,7 @@ export const userSchema = z
   .object({
     firstName: z.string().min(2),
     lastName: z.string().min(2),
-    email: z.string().email(),
+    email: z.email(),
     password: passwordSchema,
     repeatPassword: passwordSchema,
     role: z.enum([Role.ADMIN, Role.USER]).default(Role.USER),
@@ -46,7 +46,7 @@ export const updateUserSchema = z
   .object({
     firstName: z.string().min(2).optional(),
     lastName: z.string().min(2).optional(),
-    email: z.string().email().optional(),
+    email: z.email().optional(),
     oldPassword: passwordSchema.optional(),
     password: passwordSchema.optional(),
     repeatPassword: passwordSchema.optional(),
