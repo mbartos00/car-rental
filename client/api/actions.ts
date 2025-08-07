@@ -1,14 +1,16 @@
 "use server";
 
+import { loginSchema } from "@/schemas/loginSchema";
 import { registerSchema } from "@/schemas/registerSchema";
-import { LoginState, RegisterState } from "@/types";
+import { LoginFormState, RegisterFormState } from "@/types";
 import validateFormFields from "@/utlis/validateFormFields";
+import { registerUser } from "./api";
 
 export const loginFormAction = async (
-  _: LoginState,
+  _: LoginFormState,
   formData: FormData
-): Promise<LoginState> => {
-  const errors = validateFormFields(registerSchema, formData);
+): Promise<LoginFormState> => {
+  const { errors, data } = validateFormFields(loginSchema, formData);
 
   if (errors) {
     return { errors };
@@ -18,14 +20,20 @@ export const loginFormAction = async (
 };
 
 export const registerFormAction = async (
-  _: RegisterState,
+  _: RegisterFormState,
   formData: FormData
-): Promise<RegisterState> => {
-  const errors = validateFormFields(registerSchema, formData);
+): Promise<RegisterFormState> => {
+  const { errors: formErrors, data } = validateFormFields(
+    registerSchema,
+    formData
+  );
 
-  if (errors) {
-    return { errors };
+  if (formErrors) {
+    return {
+      formErrors,
+      success: false,
+    };
   }
 
-  return { success: true }; // TODO: Add auth logic
+  return await registerUser(data);
 };

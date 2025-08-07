@@ -1,4 +1,10 @@
-import { Car, CarFilters, Pagination } from "@/types";
+import {
+  Car,
+  CarFilters,
+  Pagination,
+  RegisterFormState,
+  UserInput,
+} from "@/types";
 
 export const getCarFilters = async (): Promise<CarFilters> => {
   const res = await fetch(`${process.env.API_URL}/cars/filters`);
@@ -27,4 +33,42 @@ export const getCarsWithParams = async (
   );
 
   return await res.json();
+};
+
+export const registerUser = async (
+  userData: UserInput
+): Promise<RegisterFormState> => {
+  try {
+    const res = await fetch(`${process.env.API_URL}/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        success: false,
+        error: data,
+      };
+    }
+
+    return {
+      success: true,
+      message: data?.message || "Account created successfully!",
+    };
+  } catch (error) {
+    console.error("Registration error:", error);
+    return {
+      success: false,
+      error: {
+        message: "Network error or invalid response",
+        error: "NetworkError",
+        statusCode: 0,
+      },
+    };
+  }
 };
