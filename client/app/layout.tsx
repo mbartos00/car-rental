@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
+import ToastProvider from "@/context/ToastContext";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -26,19 +27,22 @@ export default function RootLayout({
       <body
         className={`${plusJakarta.className} antialiased bg-primary-100/25`}
       >
-        <Header />
-        {children}
-        <Footer />
-        <Toaster
-          toastOptions={{
-            classNames: {
-              title: "!text-secondary-500",
-              success: "!bg-primary-0",
-            },
-          }}
-          duration={3000}
-          richColors
-        />
+        <ToastProvider>
+          <Header />
+          {children}
+          <Footer />
+          <Toaster
+            toastOptions={{
+              classNames: {
+                title: "!text-secondary-500",
+                success: "!bg-primary-0",
+              },
+            }}
+            duration={3000}
+            visibleToasts={6}
+            richColors
+          />
+        </ToastProvider>
       </body>
     </html>
   );
