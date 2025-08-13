@@ -1,6 +1,6 @@
 "use client";
 import { loginFormAction } from "@/api/actions";
-import { LoginState } from "@/types";
+import { LoginFormState } from "@/types";
 import Form from "next/form";
 import Link from "next/link";
 import { useActionState, useEffect } from "react";
@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "./ui/card";
 
-const initialState: LoginState = {
+const initialState: LoginFormState = {
   errors: {
     email: undefined,
     password: undefined,
