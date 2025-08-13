@@ -12,6 +12,7 @@ import {
 } from './schemas/user.schema';
 import { addToFavouritesSchema } from './schemas/favourites.schema';
 import { reviewSchema, updateReviewSchema } from './schemas/reviews.schema';
+import { bilingSchema, updateBilingSchema } from './schemas/biling.schema';
 
 declare module 'express' {
   interface Request {
@@ -64,3 +65,6 @@ export type ReviewSchema = z.infer<typeof reviewSchema>;
 export type UpdateReviewSchema = z.infer<typeof updateReviewSchema>;
 
 export type PrismaError = Prisma.PrismaClientKnownRequestError;
+
+export type BilingSchema = z.infer<typeof bilingSchema>;
+export type UpdateBilingSchema = z.infer<typeof updateBilingSchema>;

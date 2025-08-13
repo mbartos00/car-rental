@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { CarsModule } from './cars/cars.module';
 import { FavouritesModule } from './favourites/favourites.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { BilingModule } from './biling/biling.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     CarsModule,
     FavouritesModule,
     ReviewsModule,
+    BilingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
