@@ -60,6 +60,7 @@ model User {
   reservations   Reservation[]
   reviews        Review[]
   favouritesList FavouritesList?
+  bilingInfo     BilingInfo?
   createdAt      DateTime        @default(now())
 }
 
@@ -70,10 +71,12 @@ enum Role {
 
 model BilingInfo {
   id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String        @unique @db.ObjectId
   phoneNumber String
   address     String
   city        String
+  postalCode  String
   reservation Reservation[]
   createdAt   DateTime      @default(now())
 }
