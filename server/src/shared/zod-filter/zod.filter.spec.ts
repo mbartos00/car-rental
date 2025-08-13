@@ -1,7 +1,8 @@
-import { ZodFilter } from './zod.filter';
 import { ArgumentsHost } from '@nestjs/common';
 import { Response } from 'express';
-import { ZodError, ZodIssue } from 'zod';
+import { ZodError } from 'zod';
+import { $ZodIssue } from 'zod/v4/core/errors.cjs';
+import { ZodFilter } from './zod.filter';
 
 describe('ZodFilter', () => {
   it('should be defined', () => {
@@ -35,14 +36,14 @@ describe('ZodFilter', () => {
         path: ['field'],
         message: 'Invalid field',
         code: 'invalid_type',
-      } as ZodIssue,
+      } as $ZodIssue,
     ]);
 
     zodFilter.catch(zodError, mockArgumentsHost);
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      errors: zodError.errors,
+      errors: zodError.issues,
       message: zodError.message,
       statusCode: 400,
     });

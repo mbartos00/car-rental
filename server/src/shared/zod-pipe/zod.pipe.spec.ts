@@ -1,6 +1,6 @@
-import { ZodPipe } from './zod.pipe';
 import { BadRequestException } from '@nestjs/common';
-import { ZodSchema, z } from 'zod';
+import { z } from 'zod';
+import { ZodPipe } from './zod.pipe';
 
 type Detail = {
   code: string;
@@ -11,7 +11,7 @@ type Detail = {
 describe('ZodPipe', () => {
   let pipe: ZodPipe;
 
-  const schema: ZodSchema = z.object({
+  const schema = z.object({
     firstName: z.string().min(2),
     lastName: z.string().min(2),
   });
@@ -56,13 +56,13 @@ describe('ZodPipe', () => {
 
       expect(errorDetails[0]).toMatchObject({
         path: 'firstName',
-        message: 'String must contain at least 2 character(s)',
+        message: 'Too small: expected string to have >=2 characters',
         code: 'too_small',
       });
 
       expect(errorDetails[1]).toMatchObject({
         path: 'lastName',
-        message: 'Expected string, received number',
+        message: 'Invalid input: expected string, received number',
         code: 'invalid_type',
       });
     }
@@ -85,7 +85,7 @@ describe('ZodPipe', () => {
 
       expect(errorDetails[0]).toMatchObject({
         path: 'lastName',
-        message: 'Required',
+        message: 'Invalid input: expected string, received undefined',
         code: 'invalid_type',
       });
     }
