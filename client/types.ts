@@ -1,3 +1,7 @@
+import z from "zod";
+import { loginSchema } from "./schemas/loginSchema";
+import { registerSchema } from "./schemas/registerSchema";
+
 export type Car = {
   id: string;
   name: string;
@@ -59,12 +63,13 @@ export type Pagination = {
 };
 
 export type LoginFormState = {
-  errors?: {
+  formErrors?: {
     email?: string[];
     password?: string[];
   };
-  error?: ApiErrorResponse;
   success?: boolean;
+  error?: ApiErrorResponse;
+  message?: string;
 };
 
 export type RegisterFormState = {
@@ -80,13 +85,9 @@ export type RegisterFormState = {
   message?: string;
 };
 
-export type UserInput = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  repeatPassword: string;
-};
+export type RegisterUserInput = z.infer<typeof registerSchema>;
+
+export type LoginUserInput = z.infer<typeof loginSchema>;
 
 export type ApiErrorResponse = {
   message: string | ZodError;
@@ -104,4 +105,42 @@ export type ZodError = {
   path: string;
   message: string;
   code: string;
+};
+
+export type User = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  reservations?: Reservation[];
+  reviews?: Review[];
+  favouritesList: FavouritesList;
+  bilingInfo?: BilingInfo;
+};
+
+export type UserRole = "USER" | "ADMIN";
+
+export type Reservation = {
+  id: string;
+  startDate: Date;
+  endDate: Date;
+  user: User;
+  car: Car;
+  bilingInfo: BilingInfo;
+};
+
+export type BilingInfo = {
+  id: string;
+  phoneNumber: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  reservation: Reservation[];
+};
+
+export type FavouritesList = {
+  id: string;
+  user: User;
+  cars: Car[];
 };
