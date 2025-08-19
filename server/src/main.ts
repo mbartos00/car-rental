@@ -8,6 +8,12 @@ async function bootstrap() {
   app.useGlobalFilters(new ZodFilter());
   app.setGlobalPrefix('api');
   app.use(cookieParser());
+  app.enableCors({
+    origin: process.env.FRONTEND_URL,
+    methods: 'GET,POST,PUT,DELETE',
+    credentials: true,
+    allowedHeaders: 'Content-Type, Authorization',
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 
