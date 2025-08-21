@@ -20,3 +20,15 @@ export const formatPriceToUSD = (price: number, fractionDigits = 2) => {
     maximumFractionDigits: fractionDigits,
   }).format(price || 0);
 };
+
+export const formatDate = (inputDate: string) => {
+  const date = new Date(inputDate);
+
+  const options: Intl.DateTimeFormatOptions = {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  };
+
+  return date.toLocaleDateString("en-GB", options);
+};
