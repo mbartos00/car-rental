@@ -13,8 +13,10 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import Link from "next/link";
 
 type Props = {
+  id: string;
   carImage: string;
   name: string;
   carType: CarType;
@@ -27,6 +29,7 @@ type Props = {
 };
 
 const CarCard = ({
+  id,
   carImage,
   name,
   carType,
@@ -70,7 +73,11 @@ const CarCard = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{isLoggedIn ? "Add to favourites" : "Please log in"}</p>
+              {isLoggedIn && !isInFavourites && <p>Add to favourites</p>}
+
+              {isLoggedIn && isInFavourites && <p>Remove from favourites</p>}
+
+              {!isLoggedIn && <p>Please log in</p>}
             </TooltipContent>
           </Tooltip>
         </CardAction>
@@ -110,8 +117,8 @@ const CarCard = ({
           {formattedPrice}/
           <span className="text-xs text-secondary-300">day</span>
         </p>
-        <Button size={"lg"} className="text-base ">
-          Rent Now
+        <Button size={"lg"} className="text-base" asChild>
+          <Link href={`cars/${id}`}>Rent Now</Link>
         </Button>
       </CardFooter>
     </Card>

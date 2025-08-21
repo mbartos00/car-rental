@@ -13,6 +13,7 @@ const RecommendedCars = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
         {cars.map((car) => (
           <CarCard
+            id={car.id}
             carImage={car.images[0]}
             gearbox={car.gearbox}
             price={car.price}
