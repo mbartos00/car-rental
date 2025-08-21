@@ -27,6 +27,7 @@ export class ReviewsService {
       data: {
         userId,
         ...reviewPayload,
+        rating: Math.round(reviewPayload.rating),
       },
       omit: {
         userId: true,

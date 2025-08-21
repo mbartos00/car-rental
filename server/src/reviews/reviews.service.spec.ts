@@ -82,6 +82,23 @@ describe('ReviewsService', () => {
 
       expect(prismaMock.review.create).not.toHaveBeenCalled();
     });
+
+    it('should round rating before saving', async () => {
+      prismaMock.review.count.mockResolvedValue(0);
+      prismaMock.review.create.mockResolvedValue({ ...mockReview, rating: 4 });
+
+      await reviewsService.create('user1', {
+        carId: 'car1',
+        description: 'Good car',
+        rating: 4.2,
+      });
+
+      expect(prismaMock.review.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ rating: 4 }),
+        }),
+      );
+    });
   });
 
   describe('update', () => {
