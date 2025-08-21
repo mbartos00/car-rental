@@ -15,6 +15,8 @@ export type Car = {
   reviews: Review[];
   favouritesListId?: string;
   createdAt: string;
+  reviewCount?: number;
+  averageReview?: number;
 };
 
 export type CarType = "SEDAN" | "SUV" | "CONVERTIBLE" | "COUPE" | "HATCHBACK";
@@ -27,6 +29,7 @@ export type Review = {
   rating: number;
   carId: string;
   createdAt: string;
+  user: Pick<User, "firstName" | "lastName">;
 };
 
 export type CarFilters = {
