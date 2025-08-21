@@ -3,7 +3,7 @@ import {
   CarFilters,
   Pagination,
   RegisterFormState,
-  UserInput,
+  RegisterUserInput,
 } from "@/types";
 
 export const getCarFilters = async (): Promise<CarFilters> => {
@@ -35,8 +35,14 @@ export const getCarsWithParams = async (
   return await res.json();
 };
 
+export const getCar = async (id: string): Promise<Car> => {
+  const res = await fetch(`${process.env.API_URL}/cars/${id}`);
+
+  return await res.json();
+};
+
 export const registerUser = async (
-  userData: UserInput
+  userData: RegisterUserInput
 ): Promise<RegisterFormState> => {
   try {
     const res = await fetch(`${process.env.API_URL}/auth/register`, {
