@@ -17,7 +17,7 @@ import {
 } from "./ui/card";
 
 const initialState: LoginFormState = {
-  errors: {
+  formErrors: {
     email: undefined,
     password: undefined,
   },
@@ -55,7 +55,7 @@ const LoginForm = () => {
               placeholder="john.doe@example.com"
               required
               type="email"
-              errors={state.errors?.email}
+              errors={state.formErrors?.email}
             />
             <FormFieldInput
               label="Password"
@@ -63,7 +63,7 @@ const LoginForm = () => {
               placeholder="Enter your password"
               required
               type="password"
-              errors={state.errors?.password}
+              errors={state.formErrors?.password}
             />
             <Button className="w-full" type="submit" disabled={pending}>
               {pending ? "Logging in" : "Sign In"}
