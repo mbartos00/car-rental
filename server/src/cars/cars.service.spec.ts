@@ -22,7 +22,21 @@ describe('CarsService', () => {
   let carsService: CarsService;
   let prismaMock: DeepMockProxy<PrismaClient>;
   let mockCar: Car;
-  let mockCarWithReviews: Car & { reviews: Review[] };
+  let mockCarWithReviews: Car & {
+    reviews: Prisma.ReviewGetPayload<{
+      include: {
+        user: {
+          select: {
+            firstName: true;
+            lastName: true;
+          };
+        };
+      };
+      omit: {
+        userId: true;
+      };
+    }>[];
+  };
 
   beforeEach(async () => {
     prismaMock = mockDeep<PrismaClient>();
@@ -49,16 +63,16 @@ describe('CarsService', () => {
           rating: 5,
           description: 'Great car!',
           carId: '1',
-          userId: '1',
           createdAt: new Date(),
+          user: { firstName: 'John', lastName: 'Doe' },
         },
         {
           id: '2',
           rating: 4,
           description: 'Good value',
           carId: '1',
-          userId: '2',
           createdAt: new Date(),
+          user: { firstName: 'Jane', lastName: 'Smith' },
         },
       ],
     };
@@ -204,25 +218,46 @@ describe('CarsService', () => {
 
   describe('findOne', () => {
     it('should return car with reviews when found', async () => {
-      prismaMock.car.findUnique.mockResolvedValue(mockCarWithReviews);
+      const mockReviewStats = {
+        _count: 2,
+        _avg: { rating: 4.5 },
+      };
+
+      prismaMock.$transaction.mockImplementation(async (cb) => {
+        const mockPrisma = {
+          car: {
+            findUnique: jest.fn().mockResolvedValue(mockCarWithReviews),
+          },
+          review: {
+            aggregate: jest.fn().mockResolvedValue(mockReviewStats),
+          },
+        };
+        return cb(mockPrisma as any);
+      });
 
       const result = await carsService.findOne('1');
 
-      expect(result).toEqual(mockCarWithReviews);
-      expect(prismaMock.car.findUnique).toHaveBeenCalledWith({
-        where: { id: '1' },
-        include: {
-          reviews: {
-            omit: {
-              userId: true,
-            },
-          },
-        },
-      });
+      const expectedResult = {
+        ...mockCarWithReviews,
+        reviewCount: mockReviewStats._count,
+        averageReview: mockReviewStats._avg.rating,
+      };
+
+      expect(result).toEqual(expectedResult);
     });
 
     it('should throw NotFoundException when car not found', async () => {
-      prismaMock.car.findUnique.mockResolvedValue(null);
+      prismaMock.$transaction.mockImplementation(async (cb) => {
+        const mockPrisma = {
+          car: {
+            findUnique: jest.fn().mockResolvedValue(null),
+          },
+          review: {
+            aggregate: jest.fn(),
+          },
+        };
+        return cb(mockPrisma as any);
+      });
 
       await expect(carsService.findOne('nonexistent-id')).rejects.toThrow(
         NotFoundException,

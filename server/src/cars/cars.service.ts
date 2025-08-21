@@ -38,22 +38,44 @@ export class CarsService {
   }
 
   async findOne(id: string) {
-    const car = await this.prismaService.car.findUnique({
-      where: { id },
-      include: {
-        reviews: {
-          omit: {
-            userId: true,
+    return this.prismaService.$transaction(async (prisma) => {
+      const car = await prisma.car.findUnique({
+        where: { id },
+        include: {
+          reviews: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+              rating: true,
+              description: true,
+              carId: true,
+              createdAt: true,
+            },
           },
         },
-      },
+      });
+
+      if (!car) {
+        throw new NotFoundException('Car not found');
+      }
+
+      const reviewStats = await prisma.review.aggregate({
+        where: { carId: id },
+        _count: true,
+        _avg: { rating: true },
+      });
+
+      return {
+        ...car,
+        reviewCount: reviewStats._count,
+        averageReview: reviewStats._avg.rating || 0,
+      };
     });
-
-    if (!car) {
-      throw new NotFoundException('Car not found');
-    }
-
-    return car;
   }
 
   async update(id: string, carUpdatePayload: Prisma.CarUpdateInput) {
