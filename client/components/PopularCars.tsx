@@ -2,10 +2,11 @@ import { cars } from "@/public/data"; //TODO: Replace with logic
 import Link from "next/link";
 import CarCard from "./CarCard";
 import { Carousel, CarouselContent, CarouselItem } from "./ui/carousel";
+import { cn } from "@/lib/utils";
 
-const PopularCars = () => {
+const PopularCars = ({ wrapperClassName }: { wrapperClassName?: string }) => {
   return (
-    <section className="py-8 px-4 lg:p-16">
+    <section className={cn("py-8 px-4 lg:p-16", wrapperClassName)}>
       <div className="flex w-full justify-between mb-5 pr-6">
         <h3 className="text-sm lg:text-base font-semibold text-secondary-300">
           Popular Cars
@@ -29,6 +30,7 @@ const PopularCars = () => {
                 className="pl-6 basis-8/10 sm:basis-6/10 lg:basis-1/3 xl:basis-1/4 2xl:basis-1/5"
               >
                 <CarCard
+                  id={car.id}
                   carImage={car.images[0]}
                   gearbox={car.gearbox}
                   price={car.price}
