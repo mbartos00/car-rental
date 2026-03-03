@@ -84,12 +84,12 @@ describe('BilingController', () => {
 
     it('should reject invalid phone number', () => {
       const invalidPayload = { ...mockBilingInput, phoneNumber: '123' };
-      expect(() => bilingSchema.parse(invalidPayload)).toThrowError();
+      expect(() => bilingSchema.parse(invalidPayload)).toThrow();
     });
 
     it('should reject invalid postal code', () => {
       const invalidPayload = { ...mockBilingInput, postalCode: '12345' };
-      expect(() => bilingSchema.parse(invalidPayload)).toThrowError();
+      expect(() => bilingSchema.parse(invalidPayload)).toThrow();
     });
   });
 
@@ -98,10 +98,10 @@ describe('BilingController', () => {
       const bilingList = [mockBiling];
       bilingService.findAll.mockResolvedValue(bilingList);
 
-      const result = await controller.findAll(mockUser);
+      const result = await controller.findAll();
 
       expect(result).toEqual(bilingList);
-      expect(bilingService.findAll).toHaveBeenCalledWith(mockUser.id);
+      expect(bilingService.findAll).toHaveBeenCalledWith();
     });
   });
 
@@ -112,10 +112,7 @@ describe('BilingController', () => {
       const result = await controller.findOne(mockUser, 'biling123');
 
       expect(result).toEqual(mockBiling);
-      expect(bilingService.findOne).toHaveBeenCalledWith(
-        mockUser.id,
-        'biling123',
-      );
+      expect(bilingService.findOne).toHaveBeenCalledWith(mockUser, 'biling123');
     });
   });
 
@@ -132,7 +129,7 @@ describe('BilingController', () => {
 
       expect(result).toEqual(updatedBiling);
       expect(bilingService.update).toHaveBeenCalledWith(
-        mockUser.id,
+        mockUser,
         'biling123',
         mockUpdateBiling,
       );
@@ -140,7 +137,7 @@ describe('BilingController', () => {
 
     it('should reject invalid postal code in update', () => {
       const invalidPayload = { postalCode: '99999' };
-      expect(() => updateBilingSchema.parse(invalidPayload)).toThrowError();
+      expect(() => updateBilingSchema.parse(invalidPayload)).toThrow();
     });
   });
 
@@ -151,10 +148,7 @@ describe('BilingController', () => {
       const result = await controller.remove(mockUser, 'biling123');
 
       expect(result).toEqual(mockBiling);
-      expect(bilingService.remove).toHaveBeenCalledWith(
-        mockUser.id,
-        'biling123',
-      );
+      expect(bilingService.remove).toHaveBeenCalledWith(mockUser, 'biling123');
     });
   });
 });

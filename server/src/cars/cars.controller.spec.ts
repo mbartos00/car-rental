@@ -260,7 +260,7 @@ describe('CarsController', () => {
       const result = await controller.remove(carId);
 
       expect(result).toEqual({
-        message: `${mockCar.name} deleted succesfully`,
+        message: `${mockCar.name} deleted successfully`,
       });
       expect(carsService.remove).toHaveBeenCalledWith(carId);
     });
@@ -273,7 +273,7 @@ describe('CarsController', () => {
       const result = await controller.remove(carId);
 
       expect(result).toEqual({
-        message: `${differentCar.name} deleted succesfully`,
+        message: `${differentCar.name} deleted successfully`,
       });
       expect(carsService.remove).toHaveBeenCalledWith(carId);
     });

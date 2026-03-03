@@ -89,21 +89,21 @@ describe('AuthService', () => {
   });
 
   describe('validateUser', () => {
-    it('should throw if user not found', async () => {
+    it('should throw uniform UnauthorizedException if user not found', async () => {
       usersService.findOneByEmail.mockResolvedValueOnce(null);
 
       await expect(
         authService.validateUser('test@example.com', 'plain'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(new UnauthorizedException('Invalid credentials'));
     });
 
-    it('should throw if password does not match', async () => {
+    it('should throw uniform UnauthorizedException if password does not match', async () => {
       usersService.findOneByEmail.mockResolvedValueOnce(mockUser);
       jest.spyOn(bcrypt, 'compareSync').mockReturnValue(false);
 
       await expect(
         authService.validateUser('test@example.com', 'wrong'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(new UnauthorizedException('Invalid credentials'));
     });
 
     it('should return user without password on success', async () => {

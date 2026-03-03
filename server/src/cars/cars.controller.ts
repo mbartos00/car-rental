@@ -78,6 +78,6 @@ export class CarsController {
   async remove(@Param('id') id: string) {
     const car = await this.carsService.remove(id);
 
-    return { message: `${car.name} deleted succesfully` };
+    return { message: `${car.name} deleted successfully` };
   }
 }

@@ -13,11 +13,6 @@ import { UsersService } from 'src/users/users.service';
 
 const SALT_ROUNDS = 10;
 
-type TokenResponse = {
-  status: string;
-  value: string;
-};
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -30,13 +25,13 @@ export class AuthService {
     const user = await this.userService.findOneByEmail(email);
 
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const isMatch = bcrypt.compareSync(password, user.password);
 
     if (!isMatch) {
-      throw new BadRequestException('Password does not match');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const { password: _, ...userWithoutPassword } = user;
@@ -70,8 +65,8 @@ export class AuthService {
 
     return {
       user,
-      accessToken: tokens.accessToken.value,
-      refreshToken: tokens.refreshToken.value,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   }
 
@@ -104,7 +99,7 @@ export class AuthService {
   }) {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
-    const [accessToken, refreshToken] = await Promise.allSettled([
+    const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXPIRES_IN,
@@ -115,9 +110,6 @@ export class AuthService {
       }),
     ]);
 
-    return {
-      accessToken: accessToken as TokenResponse,
-      refreshToken: refreshToken as TokenResponse,
-    };
+    return { accessToken, refreshToken };
   }
 }

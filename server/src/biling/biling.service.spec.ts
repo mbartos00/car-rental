@@ -17,8 +17,9 @@ describe('BilingService', () => {
   let usersServiceMock: jest.Mocked<UsersService>;
 
   const userId = 'user123';
-  const adminUser = { id: userId, role: 'ADMIN' } as any;
+  const adminUser = { id: 'admin123', role: 'ADMIN' } as any;
   const regularUser = { id: userId, role: 'USER' } as any;
+  const strangerUser = { id: 'otherUser', role: 'USER' } as any;
 
   const bilingInfo = {
     id: 'biling123',
@@ -89,19 +90,12 @@ describe('BilingService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all biling info when user is ADMIN', async () => {
-      usersServiceMock.findOneById.mockResolvedValue(adminUser);
+    it('should return all biling info', async () => {
       prismaMock.bilingInfo.findMany.mockResolvedValue([bilingInfo]);
 
-      const result = await service.findAll(userId);
+      const result = await service.findAll();
 
       expect(result).toEqual([bilingInfo]);
-    });
-
-    it('should throw ForbiddenException when user is not ADMIN', async () => {
-      usersServiceMock.findOneById.mockResolvedValue(regularUser);
-
-      await expect(service.findAll(userId)).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -111,44 +105,37 @@ describe('BilingService', () => {
         ...bilingInfo,
       });
 
-      const result = await service.findOne(userId, bilingInfo.id);
+      const result = await service.findOne(regularUser, bilingInfo.id);
 
       expect(result).toEqual({ ...bilingInfo, user: regularUser });
     });
 
-    it('should allow ADMIN to view any biling info', async () => {
-      const adminBilling = { ...bilingInfo, user: adminUser };
-
+    it("should allow ADMIN to view another user's biling info", async () => {
       prismaMock.bilingInfo.findUnique.mockResolvedValue({
-        ...adminBilling,
+        ...bilingInfo,
       });
 
-      const result = await service.findOne(userId, bilingInfo.id);
+      const result = await service.findOne(adminUser, bilingInfo.id);
 
-      expect(result).toEqual({ ...bilingInfo, user: adminUser });
+      expect(result).toEqual({ ...bilingInfo, user: regularUser });
     });
 
     it('should throw NotFoundException if not found', async () => {
       prismaMock.bilingInfo.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne(userId, bilingInfo.id)).rejects.toThrow(
+      await expect(service.findOne(regularUser, bilingInfo.id)).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should throw ForbiddenException if not owner or admin', async () => {
-      const invalidUser = {
-        ...bilingInfo,
-        user: { id: 'otherUser', role: 'USER' },
-      };
-
       prismaMock.bilingInfo.findUnique.mockResolvedValue({
-        ...invalidUser,
+        ...bilingInfo,
       });
 
-      await expect(service.findOne(userId, bilingInfo.id)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.findOne(strangerUser, bilingInfo.id),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -167,14 +154,41 @@ describe('BilingService', () => {
         ...updatePayload,
       });
 
-      const result = await service.update(userId, bilingInfo.id, updatePayload);
+      const result = await service.update(
+        regularUser,
+        bilingInfo.id,
+        updatePayload,
+      );
 
       expect(result).toEqual({ ...bilingInfo, ...updatePayload });
       expect(prismaMock.bilingInfo.update).toHaveBeenCalledWith({
-        where: { id: bilingInfo.id, userId },
+        where: { id: bilingInfo.id },
         data: updatePayload,
         omit: { userId: true },
       });
+    });
+
+    it("should allow ADMIN to update another user's biling info", async () => {
+      prismaMock.$transaction.mockImplementation(async (cb) =>
+        cb({
+          bilingInfo: {
+            findUnique: jest.fn().mockResolvedValue(bilingInfo),
+            update: prismaMock.bilingInfo.update,
+          },
+        } as any),
+      );
+      prismaMock.bilingInfo.update.mockResolvedValue({
+        ...bilingInfo,
+        ...updatePayload,
+      });
+
+      const result = await service.update(
+        adminUser,
+        bilingInfo.id,
+        updatePayload,
+      );
+
+      expect(result).toEqual({ ...bilingInfo, ...updatePayload });
     });
 
     it('should throw NotFoundException if biling info not found', async () => {
@@ -187,23 +201,21 @@ describe('BilingService', () => {
       );
 
       await expect(
-        service.update(userId, bilingInfo.id, updatePayload),
+        service.update(regularUser, bilingInfo.id, updatePayload),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw ForbiddenException if user not owner', async () => {
+    it('should throw ForbiddenException if user not owner nor admin', async () => {
       prismaMock.$transaction.mockImplementation(async (cb) =>
         cb({
           bilingInfo: {
-            findUnique: jest
-              .fn()
-              .mockResolvedValue({ ...bilingInfo, userId: 'otherUser' }),
+            findUnique: jest.fn().mockResolvedValue(bilingInfo),
           },
         } as any),
       );
 
       await expect(
-        service.update(userId, bilingInfo.id, updatePayload),
+        service.update(strangerUser, bilingInfo.id, updatePayload),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -220,11 +232,11 @@ describe('BilingService', () => {
       );
       prismaMock.bilingInfo.delete.mockResolvedValue(bilingInfo);
 
-      const result = await service.remove(userId, bilingInfo.id);
+      const result = await service.remove(regularUser, bilingInfo.id);
 
       expect(result).toEqual({ message: 'Biling info removed' });
       expect(prismaMock.bilingInfo.delete).toHaveBeenCalledWith({
-        where: { id: bilingInfo.id, userId },
+        where: { id: bilingInfo.id },
       });
     });
 
@@ -237,23 +249,21 @@ describe('BilingService', () => {
         } as any),
       );
 
-      await expect(service.remove(userId, bilingInfo.id)).rejects.toThrow(
+      await expect(service.remove(regularUser, bilingInfo.id)).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should throw ForbiddenException if user not owner', async () => {
+    it('should throw ForbiddenException if user not owner nor admin', async () => {
       prismaMock.$transaction.mockImplementation(async (cb) =>
         cb({
           bilingInfo: {
-            findUnique: jest
-              .fn()
-              .mockResolvedValue({ ...bilingInfo, userId: 'otherUser' }),
+            findUnique: jest.fn().mockResolvedValue(bilingInfo),
           },
         } as any),
       );
 
-      await expect(service.remove(userId, bilingInfo.id)).rejects.toThrow(
+      await expect(service.remove(strangerUser, bilingInfo.id)).rejects.toThrow(
         ForbiddenException,
       );
     });

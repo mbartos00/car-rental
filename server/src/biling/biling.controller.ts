@@ -35,13 +35,13 @@ export class BilingController {
 
   @Roles('ADMIN')
   @Get()
-  findAll(@User() user: JwtUser) {
-    return this.bilingService.findAll(user.id);
+  findAll() {
+    return this.bilingService.findAll();
   }
 
   @Get(':id')
   findOne(@User() user: JwtUser, @Param('id') id: string) {
-    return this.bilingService.findOne(user.id, id);
+    return this.bilingService.findOne(user, id);
   }
 
   @Patch(':id')
@@ -51,11 +51,11 @@ export class BilingController {
     @Body(new ZodPipe(updateBilingSchema))
     updateBilingPayload: UpdateBilingSchema,
   ) {
-    return this.bilingService.update(user.id, id, updateBilingPayload);
+    return this.bilingService.update(user, id, updateBilingPayload);
   }
 
   @Delete(':id')
   remove(@User() user: JwtUser, @Param('id') id: string) {
-    return this.bilingService.remove(user.id, id);
+    return this.bilingService.remove(user, id);
   }
 }

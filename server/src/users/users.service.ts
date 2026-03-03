@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/db/prisma.service';
 import { UserWithoutPassword } from 'src/shared/types';
+
+const SALT_ROUNDS = 10;
 
 @Injectable()
 export class UsersService {
@@ -24,13 +31,9 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { email },
     });
-
-    if (!user) throw new NotFoundException('User not found');
-
-    return user;
   }
 
   async findOneById(id: string): Promise<UserWithoutPassword | null> {
@@ -46,10 +49,28 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserPayload: Prisma.UserUpdateInput) {
+  async update(
+    id: string,
+    updateUserPayload: Prisma.UserUpdateInput,
+    oldPassword?: string,
+  ) {
+    const data = { ...updateUserPayload };
+
+    if (typeof data.password === 'string') {
+      const user = await this.prisma.user.findUnique({ where: { id } });
+
+      if (!user) throw new NotFoundException('User not found');
+
+      if (!oldPassword || !bcrypt.compareSync(oldPassword, user.password)) {
+        throw new BadRequestException('Old password is incorrect');
+      }
+
+      data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
+    }
+
     return this.prisma.user.update({
       where: { id },
-      data: { ...updateUserPayload },
+      data,
       omit: { password: true },
     });
   }

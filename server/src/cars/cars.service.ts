@@ -86,7 +86,7 @@ export class CarsService {
         throw new NotFoundException('Car not found');
       }
 
-      return await this.prismaService.car.update({
+      return await prisma.car.update({
         where: { id },
         data: carUpdatePayload,
       });
@@ -101,7 +101,7 @@ export class CarsService {
         throw new NotFoundException('Car not found');
       }
 
-      return await this.prismaService.car.delete({
+      return await prisma.car.delete({
         where: { id },
       });
     });

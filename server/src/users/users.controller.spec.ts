@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@prisma/client';
@@ -65,6 +65,7 @@ describe('UsersController', () => {
 
   describe('create', () => {
     it('should create a new user', async () => {
+      usersService.findOneByEmail.mockResolvedValue(null);
       usersService.create.mockResolvedValue(mockUser);
 
       const result = await controller.create(mockUser);
@@ -105,14 +106,23 @@ describe('UsersController', () => {
   });
 
   describe('findOne', () => {
-    it('should find user by email', async () => {
+    it('should find user by email and strip the password', async () => {
       usersService.findOneByEmail.mockResolvedValue(mockUser);
 
       const result = await controller.findOne('test@example.com');
 
-      expect(result).toEqual(mockUser);
+      const { password: _, ...userWithoutPassword } = mockUser;
+      expect(result).toEqual(userWithoutPassword);
       expect(usersService.findOneByEmail).toHaveBeenCalledWith(
         'test@example.com',
+      );
+    });
+
+    it('should throw NotFoundException when user does not exist', async () => {
+      usersService.findOneByEmail.mockResolvedValue(null);
+
+      await expect(controller.findOne('missing@example.com')).rejects.toThrow(
+        NotFoundException,
       );
     });
   });
@@ -125,11 +135,15 @@ describe('UsersController', () => {
       const result = await controller.update(mockId, mockUpdateUser);
 
       expect(result).toEqual({ message: 'User updated' });
-      expect(usersService.update).toHaveBeenCalledWith(mockId, {
-        firstName: mockUpdateUser.firstName,
-        lastName: mockUpdateUser.lastName,
-        email: mockUpdateUser.email,
-      });
+      expect(usersService.update).toHaveBeenCalledWith(
+        mockId,
+        {
+          firstName: mockUpdateUser.firstName,
+          lastName: mockUpdateUser.lastName,
+          email: mockUpdateUser.email,
+        },
+        undefined,
+      );
     });
   });
 

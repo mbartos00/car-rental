@@ -282,6 +282,7 @@ describe('CarsService', () => {
         return cb({
           car: {
             findUnique: jest.fn().mockResolvedValue(mockCar),
+            update: prismaMock.car.update,
           },
         } as any);
       });
@@ -320,6 +321,7 @@ describe('CarsService', () => {
         return cb({
           car: {
             findUnique: jest.fn().mockResolvedValue(mockCar),
+            delete: prismaMock.car.delete,
           },
         } as any);
       });

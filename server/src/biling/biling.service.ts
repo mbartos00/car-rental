@@ -4,8 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from 'src/db/prisma.service';
-import { BilingSchema, UpdateBilingSchema } from 'src/shared/types';
+import { BilingSchema, JwtUser, UpdateBilingSchema } from 'src/shared/types';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -43,17 +44,11 @@ export class BilingService {
     });
   }
 
-  async findAll(userId: string) {
-    const user = await this.userService.findOneById(userId);
-
-    if (user?.role !== 'ADMIN') {
-      throw new ForbiddenException('Access denied');
-    }
-
+  async findAll() {
     return this.prismaService.bilingInfo.findMany();
   }
 
-  async findOne(userId: string, id: string) {
+  async findOne(user: JwtUser, id: string) {
     const bilingInfo = await this.prismaService.bilingInfo.findUnique({
       where: { id },
       include: {
@@ -72,7 +67,7 @@ export class BilingService {
       throw new NotFoundException('Resource not found');
     }
 
-    if (bilingInfo.user.id !== userId && bilingInfo.user.role !== 'ADMIN') {
+    if (bilingInfo.user.id !== user.id && user.role !== Role.ADMIN) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -80,7 +75,7 @@ export class BilingService {
   }
 
   async update(
-    userId: string,
+    user: JwtUser,
     id: string,
     updateBilingPayload: UpdateBilingSchema,
   ) {
@@ -91,12 +86,14 @@ export class BilingService {
         throw new NotFoundException('Biling info not found');
       }
 
-      if (bilingInfo.userId !== userId) {
-        throw new ForbiddenException('You cannot update this review');
+      if (bilingInfo.userId !== user.id && user.role !== Role.ADMIN) {
+        throw new ForbiddenException(
+          'You cannot update this biling information',
+        );
       }
 
       return prisma.bilingInfo.update({
-        where: { id, userId },
+        where: { id },
         data: { ...updateBilingPayload },
         omit: {
           userId: true,
@@ -105,7 +102,7 @@ export class BilingService {
     });
   }
 
-  async remove(userId: string, id: string) {
+  async remove(user: JwtUser, id: string) {
     return this.prismaService.$transaction(async (prisma) => {
       const bilingInfo = await prisma.bilingInfo.findUnique({ where: { id } });
 
@@ -113,12 +110,12 @@ export class BilingService {
         throw new NotFoundException('Biling info not found');
       }
 
-      if (bilingInfo.userId !== userId) {
+      if (bilingInfo.userId !== user.id && user.role !== Role.ADMIN) {
         throw new ForbiddenException('You cannot remove this resource');
       }
 
       await prisma.bilingInfo.delete({
-        where: { id, userId },
+        where: { id },
       });
 
       return { message: 'Biling info removed' };

@@ -1,7 +1,7 @@
 import { ArgumentsHost } from '@nestjs/common';
 import { Response } from 'express';
 import { ZodError } from 'zod';
-import { $ZodIssue } from 'zod/v4/core/errors.cjs';
+import type { $ZodIssue } from 'zod/v4/core';
 import { ZodFilter } from './zod.filter';
 
 describe('ZodFilter', () => {

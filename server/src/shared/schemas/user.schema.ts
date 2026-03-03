@@ -52,6 +52,14 @@ export const updateUserSchema = z
     repeatPassword: passwordSchema.optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.password && !data.oldPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Old password is required to set a new password',
+        path: ['oldPassword'],
+      });
+    }
+
     if (data.oldPassword && (!data.password || !data.repeatPassword)) {
       ctx.addIssue({
         code: 'custom',

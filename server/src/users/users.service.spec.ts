@@ -1,6 +1,7 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient, Role, User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from 'src/db/prisma.service';
 import { UsersService } from './users.service';
@@ -81,12 +82,14 @@ describe('UsersService', () => {
       });
     });
 
-    it('should throw NotFoundException when user not found', async () => {
+    it('should return null when user not found', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
 
-      await expect(
-        usersService.findOneByEmail('nonexistent@example.com'),
-      ).rejects.toThrow(NotFoundException);
+      const result = await usersService.findOneByEmail(
+        'nonexistent@example.com',
+      );
+
+      expect(result).toBeNull();
     });
   });
 
@@ -113,17 +116,66 @@ describe('UsersService', () => {
   });
 
   describe('update', () => {
-    it('should update user', async () => {
+    it('should update user fields without touching password', async () => {
+      const payload = { firstName: 'Updated' };
       prismaMock.user.update.mockResolvedValue(mockUser);
 
-      const result = await usersService.update('1', mockUser);
+      const result = await usersService.update('1', payload);
 
       expect(result).toEqual(mockUser);
       expect(prismaMock.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: mockUser,
+        data: payload,
         omit: { password: true },
       });
+    });
+
+    it('should verify old password and store a hash when updating password', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(mockUser);
+      prismaMock.user.update.mockResolvedValue(mockUser);
+      const compareSpy = jest
+        .spyOn(bcrypt, 'compareSync')
+        .mockReturnValue(true);
+      const hashSpy = jest
+        .spyOn(bcrypt, 'hash')
+        .mockResolvedValue('newHashedPassword' as never);
+
+      await usersService.update('1', { password: 'NewPass1!' }, 'OldPass1!');
+
+      expect(compareSpy).toHaveBeenCalledWith('OldPass1!', mockUser.password);
+      expect(hashSpy).toHaveBeenCalledWith('NewPass1!', 10);
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: '1' },
+        data: { password: 'newHashedPassword' },
+        omit: { password: true },
+      });
+    });
+
+    it('should throw BadRequestException when old password is wrong', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(mockUser);
+      jest.spyOn(bcrypt, 'compareSync').mockReturnValue(false);
+
+      await expect(
+        usersService.update('1', { password: 'NewPass1!' }, 'WrongOld1!'),
+      ).rejects.toThrow(BadRequestException);
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when old password is missing', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+      await expect(
+        usersService.update('1', { password: 'NewPass1!' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when user does not exist', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        usersService.update('1', { password: 'NewPass1!' }, 'OldPass1!'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

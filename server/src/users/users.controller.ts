@@ -4,9 +4,11 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { updateUserSchema, userSchema } from 'src/shared/schemas/user.schema';
@@ -42,8 +44,16 @@ export class UsersController {
   }
 
   @Get('user')
-  findOne(@Param('email') email: string) {
-    return this.usersService.findOneByEmail(email);
+  async findOne(@Query('email') email: string) {
+    const user = await this.usersService.findOneByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
   }
 
   @Patch('update/:id')
@@ -51,9 +61,13 @@ export class UsersController {
     @Param('id') id: string,
     @Body(new ZodPipe(updateUserSchema)) user: ValidUpdatedUser,
   ) {
-    const { repeatPassword: _repeat, oldPassword: _old, ...userPayload } = user;
+    const { repeatPassword: _repeat, oldPassword, ...userPayload } = user;
 
-    const updatedUser = await this.usersService.update(id, userPayload);
+    const updatedUser = await this.usersService.update(
+      id,
+      userPayload,
+      oldPassword,
+    );
 
     if (updatedUser) {
       return { message: 'User updated' };
