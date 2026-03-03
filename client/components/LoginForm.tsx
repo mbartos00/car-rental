@@ -1,10 +1,12 @@
 "use client";
 import { loginFormAction } from "@/api/actions";
+import { ROUTES } from "@/constants/routes";
+import useToastContext from "@/hooks/useToastContext";
 import { LoginFormState } from "@/types";
 import Form from "next/form";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
-import { toast } from "sonner";
 import FormFieldInput from "./FormFieldInput";
 import { Button } from "./ui/button";
 import {
@@ -24,17 +26,22 @@ const initialState: LoginFormState = {
   success: undefined,
 };
 
-const LoginForm = () => {
+const LoginForm = ({ from }: { from?: string }) => {
   const [state, formAction, pending] = useActionState(
     loginFormAction,
     initialState
   );
 
+  const { handleToast } = useToastContext();
+  const router = useRouter();
+
   useEffect(() => {
+    handleToast(state.success, state.error, state.message);
+
     if (state.success) {
-      toast.success("Login Successful");
+      router.push(from ?? ROUTES.HOME);
     }
-  }, [state.success]);
+  }, [state.success, state.error, state.message, handleToast, router, from]);
 
   return (
     <>
@@ -74,7 +81,7 @@ const LoginForm = () => {
           <div className="text-center text-sm text-gray-600">
             {"Don't have an account? "}
             <Button variant="link" asChild className="p-0 text-primary-500">
-              <Link href="/register">Sign up</Link>
+              <Link href={ROUTES.REGISTER}>Sign up</Link>
             </Button>
           </div>
         </CardFooter>

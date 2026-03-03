@@ -1,10 +1,13 @@
 import {
   Car,
   CarFilters,
+  LoginApiResult,
+  LoginUserInput,
   Pagination,
   RegisterFormState,
   RegisterUserInput,
 } from "@/types";
+import { REFRESH_TOKEN_COOKIE } from "@/utlis/authCookies";
 
 export const getCarFilters = async (): Promise<CarFilters> => {
   const res = await fetch(`${process.env.API_URL}/cars/filters`);
@@ -39,6 +42,59 @@ export const getCar = async (id: string): Promise<Car> => {
   const res = await fetch(`${process.env.API_URL}/cars/${id}`);
 
   return await res.json();
+};
+
+export const loginUser = async (
+  credentials: LoginUserInput
+): Promise<LoginApiResult> => {
+  try {
+    const res = await fetch(`${process.env.API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(credentials),
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return { success: false, error: data };
+    }
+
+    const refreshCookie = res.headers
+      .getSetCookie()
+      .find((cookie) => cookie.startsWith(`${REFRESH_TOKEN_COOKIE}=`));
+    const refreshToken = refreshCookie
+      ? decodeURIComponent(
+          refreshCookie.split(";")[0].slice(REFRESH_TOKEN_COOKIE.length + 1)
+        )
+      : undefined;
+
+    if (!data.accessToken || !refreshToken) {
+      return {
+        success: false,
+        error: {
+          message: "Malformed login response",
+          error: "AuthError",
+          statusCode: 500,
+        },
+      };
+    }
+
+    return { success: true, accessToken: data.accessToken, refreshToken };
+  } catch (error) {
+    console.error("Login error:", error);
+    return {
+      success: false,
+      error: {
+        message: "Network error or invalid response",
+        error: "NetworkError",
+        statusCode: 0,
+      },
+    };
+  }
 };
 
 export const registerUser = async (

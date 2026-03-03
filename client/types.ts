@@ -124,6 +124,24 @@ export type User = {
 
 export type UserRole = "USER" | "ADMIN";
 
+export type JwtPayload = {
+  sub: string;
+  email: string;
+  role: UserRole;
+  iat: number;
+  exp: number;
+};
+
+export type Session = {
+  id: string;
+  email: string;
+  role: UserRole;
+};
+
+export type LoginApiResult =
+  | { success: true; accessToken: string; refreshToken: string }
+  | { success: false; error: ApiErrorResponse };
+
 export type Reservation = {
   id: string;
   startDate: Date;

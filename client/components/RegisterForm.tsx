@@ -1,5 +1,6 @@
 "use client";
 import { registerFormAction } from "@/api/actions";
+import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +14,7 @@ import useToastContext from "@/hooks/useToastContext";
 import { RegisterFormState } from "@/types";
 import Form from "next/form";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import FormFieldInput from "./FormFieldInput";
 
@@ -34,10 +36,15 @@ const RegisterForm = () => {
   );
 
   const { handleToast } = useToastContext();
+  const router = useRouter();
 
   useEffect(() => {
     handleToast(state.success, state.error, state?.message);
-  }, [state.success, state.error, state.message, handleToast]);
+
+    if (state.success) {
+      router.push(ROUTES.LOGIN);
+    }
+  }, [state.success, state.error, state.message, handleToast, router]);
 
   return (
     <>
@@ -99,7 +106,7 @@ const RegisterForm = () => {
           <div className="text-center text-sm text-gray-600">
             {"Already have an account? "}
             <Button variant="link" asChild className="p-0 text-primary-500">
-              <Link href="/login">Log in</Link>
+              <Link href={ROUTES.LOGIN}>Log in</Link>
             </Button>
           </div>
         </CardFooter>

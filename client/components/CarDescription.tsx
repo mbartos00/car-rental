@@ -14,8 +14,9 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { getSession } from "@/api/session";
 
-const CarDescription = ({
+const CarDescription = async ({
   id,
   carType,
   description,
@@ -28,7 +29,9 @@ const CarDescription = ({
   averageReview,
 }: Omit<Car, "images" | "reviews" | "createdAt">) => {
   const formattedPrice = formatPriceToUSD(price);
-  const isLoggedIn = false; //TODO:Replace with logic
+  const session = await getSession();
+  const isLoggedIn = !!session;
+
   const isInFavourites = false; //TODO:Replace with logic
 
   return (
@@ -61,7 +64,7 @@ const CarDescription = ({
                     isInFavourites && "fill-red-500 stroke-0",
                     isLoggedIn &&
                       "group-hover:fill-red-500 group-hover:stroke-0",
-                    !isLoggedIn && "stroke-secondary-100 fill-secondary-100"
+                    !isLoggedIn && "stroke-secondary-100 fill-secondary-100",
                   )}
                 />
               </Button>

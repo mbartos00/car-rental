@@ -1,4 +1,5 @@
 "use client";
+import { ROUTES } from "@/constants/routes";
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,7 @@ const Searchbar = ({ className }: Props) => {
   return (
     <Form
       key={searchParams.get("search")}
-      action="/cars"
+      action={ROUTES.CARS}
       className={cn("relative", className)}
     >
       <Input

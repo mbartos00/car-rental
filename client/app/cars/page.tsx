@@ -1,4 +1,5 @@
 import { getCarFilters, getCarsWithParams } from "@/api/api";
+import { getSession } from "@/api/session";
 import CarCard from "@/components/CarCard";
 import CarFilters from "@/components/CarFilters";
 import CarPagination from "@/components/CarPagination";
@@ -10,6 +11,7 @@ export default async function Cars({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const session = await getSession();
   const filters = await getCarFilters();
   const { data: cars, pagination } = await getCarsWithParams(
     searchParams,
@@ -55,7 +57,7 @@ export default async function Cars({
             tankCapacity={car.tankCapacity}
             carType={car.carType}
             key={car.id}
-            isLoggedIn={false}
+            isLoggedIn={!!session}
             isInFavourites={false}
           />
         ))}
