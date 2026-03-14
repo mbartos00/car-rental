@@ -1,7 +1,6 @@
 "use client";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { ApiErrorResponse } from "@/types";
-import { createContext, ReactNode } from "react";
+import { createContext, ReactNode, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 interface ToastContextType {
@@ -16,51 +15,53 @@ export const ToastContext = createContext<ToastContextType | undefined>(
   undefined
 );
 
+const getPosition = () =>
+  window.matchMedia("(min-width: 1024px)").matches
+    ? ("bottom-right" as const)
+    : ("top-center" as const);
+
 const ToastProvider = ({ children }: { children: ReactNode }) => {
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const handleToast = useCallback(
+    (success?: boolean, error?: ApiErrorResponse, message?: string) => {
+      if (success === undefined) return;
 
-  const handleToast = (
-    success?: boolean,
-    error?: ApiErrorResponse,
-    message?: string
-  ) => {
-    if (success === undefined) return;
+      const position = getPosition();
 
-    switch (success) {
-      case true:
-        toast.success(message, {
-          position: isDesktop ? "bottom-right" : "top-center",
-        });
-        break;
-      case false:
-        if (!error && !message) return;
+      switch (success) {
+        case true:
+          toast.success(message, { position });
+          break;
+        case false:
+          if (!error && !message) return;
 
-        if (Array.isArray(error?.message)) {
-          error.message.forEach((err) => {
-            toast.error(error?.error, {
-              description: err.message,
-              position: isDesktop ? "bottom-right" : "top-center",
+          if (Array.isArray(error?.message)) {
+            error.message.forEach((err) => {
+              toast.error(error?.error, {
+                description: err.message,
+                position,
+              });
             });
-          });
-        } else {
-          toast.error(error?.error ?? "Error", {
-            description: (error?.message as string) ?? message,
-            position: isDesktop ? "bottom-right" : "top-center",
-          });
-        }
+          } else {
+            toast.error(error?.error ?? "Error", {
+              description: (error?.message as string) ?? message,
+              position,
+            });
+          }
 
-        break;
-      default:
-        toast.error((error?.message as string) || "Something went wrong", {
-          position: isDesktop ? "bottom-right" : "top-center",
-        });
-    }
-  };
+          break;
+        default:
+          toast.error((error?.message as string) || "Something went wrong", {
+            position,
+          });
+      }
+    },
+    []
+  );
+
+  const value = useMemo(() => ({ handleToast }), [handleToast]);
 
   return (
-    <ToastContext.Provider value={{ handleToast }}>
-      {children}
-    </ToastContext.Provider>
+    <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
   );
 };
 
