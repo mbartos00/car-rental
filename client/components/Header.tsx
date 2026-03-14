@@ -1,7 +1,8 @@
 import { getSession } from "@/api/session";
 import { ROUTES } from "@/constants/routes";
-import { Heart, User } from "lucide-react";
+import { User } from "lucide-react";
 import Link from "next/link";
+import FavouritesHeartLink from "./FavouritesHeartLink";
 import LoginLink from "./LoginLink";
 import LogoutButton from "./LogoutButton";
 import Searchbar from "./Searchbar";
@@ -21,13 +22,7 @@ const Header = async () => {
         <Searchbar className="col-start-1 row-start-2 col-span-5 lg:col-start-2 lg:row-start-1 lg:col-span-5" />
 
         <div className="w-fit col-start-3 col-span-3 justify-self-end lg:col-start-7 lg:row-start-1">
-          {isLoggedIn && (
-            <Button variant="ghost" asChild className="size-10 group lg:mr-4">
-              <Link href={ROUTES.FAVOURITES}>
-                <Heart className="stroke-secondary-400 fill-secondary-400 size-6 group-hover:fill-red-500 group-hover:stroke-red-500" />
-              </Link>
-            </Button>
-          )}
+          {isLoggedIn && <FavouritesHeartLink />}
           {isLoggedIn ? (
             <>
               <Button

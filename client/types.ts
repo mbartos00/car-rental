@@ -165,3 +165,15 @@ export type FavouritesList = {
   user: User;
   cars: Car[];
 };
+
+export type FavouritesResponse = {
+  id: string;
+  userId: string;
+  cars: Car[];
+  createdAt: string;
+};
+
+export type ActionResult = {
+  success: boolean;
+  message: string;
+};

@@ -1,6 +1,7 @@
 import {
   Car,
   CarFilters,
+  FavouritesResponse,
   LoginApiResult,
   LoginUserInput,
   Pagination,
@@ -8,6 +9,22 @@ import {
   RegisterUserInput,
 } from "@/types";
 import { REFRESH_TOKEN_COOKIE } from "@/utlis/authCookies";
+import apiFetch from "./apiFetch";
+
+export const getFavourites = async (): Promise<Car[] | null> => {
+  try {
+    const res = await apiFetch("/favourites");
+
+    if (!res.ok) return null;
+
+    const data: FavouritesResponse = await res.json();
+
+    return data.cars;
+  } catch (error) {
+    console.error("Favourites fetch error:", error);
+    return null;
+  }
+};
 
 export const getCarFilters = async (): Promise<CarFilters> => {
   const res = await fetch(`${process.env.API_URL}/cars/filters`);

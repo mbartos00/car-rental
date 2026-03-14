@@ -1,7 +1,8 @@
-import { cn, formatPriceToUSD, toTitleCase } from "@/lib/utils";
+import { formatPriceToUSD, toTitleCase } from "@/lib/utils";
 import { CarType } from "@/types";
-import { Fuel, Heart, LifeBuoy, User } from "lucide-react";
+import { Fuel, LifeBuoy, User } from "lucide-react";
 import Image from "next/image";
+import FavouriteButton from "./FavouriteButton";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -12,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import Link from "next/link";
 
 type Props = {
@@ -43,7 +43,7 @@ const CarCard = ({
   const formattedPrice = formatPriceToUSD(price);
 
   return (
-    <Card className="border-none">
+    <Card className="border-none transition-opacity has-[[data-pending]]:opacity-60 has-[[data-pending]]:pointer-events-none">
       <CardHeader>
         <CardTitle className="text-secondary-500 font-semibold text-base lg:font-bold lg:text-xl">
           {name}
@@ -52,34 +52,11 @@ const CarCard = ({
           {carType}
         </CardDescription>
         <CardAction>
-          <Tooltip>
-            <TooltipTrigger className="size-6 hover:bg-transparent group">
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={!isLoggedIn}
-                asChild
-                className="size-6 hover:bg-transparent group"
-              >
-                <Heart
-                  className={cn(
-                    "size-6 stroke-secondary-300 transition-all",
-                    isInFavourites && "fill-red-500 stroke-0",
-                    isLoggedIn &&
-                      "group-hover:fill-red-500 group-hover:stroke-0",
-                    !isLoggedIn && "stroke-secondary-100 fill-secondary-100"
-                  )}
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isLoggedIn && !isInFavourites && <p>Add to favourites</p>}
-
-              {isLoggedIn && isInFavourites && <p>Remove from favourites</p>}
-
-              {!isLoggedIn && <p>Please log in</p>}
-            </TooltipContent>
-          </Tooltip>
+          <FavouriteButton
+            carId={id}
+            isLoggedIn={isLoggedIn}
+            isInFavourites={isInFavourites}
+          />
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">

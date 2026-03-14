@@ -2,7 +2,7 @@
 
 import { loginSchema } from "@/schemas/loginSchema";
 import { registerSchema } from "@/schemas/registerSchema";
-import { LoginFormState, RegisterFormState } from "@/types";
+import { ActionResult, LoginFormState, RegisterFormState } from "@/types";
 import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
@@ -10,8 +10,11 @@ import {
 } from "@/utlis/authCookies";
 import decodeJwtPayload from "@/utlis/jwt";
 import validateFormFields from "@/utlis/validateFormFields";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { ROUTES } from "@/constants/routes";
 import { loginUser, registerUser } from "./api";
+import apiFetch from "./apiFetch";
 
 export const loginFormAction = async (
   _: LoginFormState,
@@ -75,6 +78,41 @@ export const logoutAction = async (): Promise<void> => {
 
   cookieStore.delete(ACCESS_TOKEN_COOKIE);
   cookieStore.delete(REFRESH_TOKEN_COOKIE);
+};
+
+export const toggleFavouriteAction = async (
+  carId: string,
+  isInFavourites: boolean
+): Promise<ActionResult> => {
+  try {
+    const res = await apiFetch("/favourites", {
+      method: isInFavourites ? "DELETE" : "PATCH",
+      body: JSON.stringify({ carId }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      const message =
+        typeof data?.message === "string"
+          ? data.message
+          : "Something went wrong";
+
+      return { success: false, message };
+    }
+
+    revalidatePath(ROUTES.CARS);
+    revalidatePath(ROUTES.FAVOURITES);
+
+    return {
+      success: true,
+      message: isInFavourites
+        ? "Removed from favourites"
+        : "Added to favourites",
+    };
+  } catch (error) {
+    console.error("Favourites toggle error:", error);
+    return { success: false, message: "Network error" };
+  }
 };
 
 export const registerFormAction = async (

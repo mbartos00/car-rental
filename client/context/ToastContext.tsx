@@ -43,8 +43,8 @@ const ToastProvider = ({ children }: { children: ReactNode }) => {
             });
           });
         } else {
-          toast.error(error?.error, {
-            description: error?.message as string,
+          toast.error(error?.error ?? "Error", {
+            description: (error?.message as string) ?? message,
             position: isDesktop ? "bottom-right" : "top-center",
           });
         }

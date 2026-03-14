@@ -1,4 +1,4 @@
-import { getCarFilters, getCarsWithParams } from "@/api/api";
+import { getCarFilters, getCarsWithParams, getFavourites } from "@/api/api";
 import { getSession } from "@/api/session";
 import CarCard from "@/components/CarCard";
 import CarFilters from "@/components/CarFilters";
@@ -17,6 +17,8 @@ export default async function Cars({
     searchParams,
     DEFAULT_PAGE_SIZE
   );
+  const favourites = session ? await getFavourites() : null;
+  const favouriteIds = new Set(favourites?.map((car) => car.id));
   const page = parseInt(
     ((await searchParams).page as string) || String(pagination.page)
   );
@@ -58,7 +60,7 @@ export default async function Cars({
             carType={car.carType}
             key={car.id}
             isLoggedIn={!!session}
-            isInFavourites={false}
+            isInFavourites={favouriteIds.has(car.id)}
           />
         ))}
       </div>
