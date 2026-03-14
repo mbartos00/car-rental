@@ -47,7 +47,7 @@ export default async function Cars({
         filters={filters}
         className="xl:col-span-3 xl:row-span-2 2xl:col-span-2 xl:p-8"
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 xl:gap-8 xl:col-span-7 2xl:col-span-8 xl:px-6 xl:pt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 xl:gap-8 xl:col-span-7 2xl:col-span-8 xl:px-6 xl:pt-6 items-start">
         {cars.map((car) => (
           <CarCard
             id={car.id}
@@ -71,8 +71,8 @@ export default async function Cars({
           totalCount={pagination.totalPages}
           pageSearchParam="page"
         />
-        <p className="h-fit text-sm lg:text-base font-semibold text-secondary-300 justify-self-center mt-4">
-          {`${pagination.total} cars`}
+        <p className="h-fit text-sm lg:text-base font-semibold text-secondary-300 text-right mt-4">
+          {`${pagination.total} ${pagination.total === 1 ? "car" : "cars"}`}
         </p>
       </div>
     </section>

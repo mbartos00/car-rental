@@ -60,15 +60,16 @@ const CarCard = ({
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
-        <div className="relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-1/2 after:bg-gradient-to-t after:from-white after:to-transparent after:pointer-events-none after:z-10 max-w-xl mx-auto">
+        <div className="relative w-full aspect-video overflow-hidden rounded-lg">
           <Image
             src={carImage}
             alt={`${name} image`}
-            width={250}
-            height={100}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover"
           />
         </div>
-        <div className="flex flex-wrap justify-center gap-4 text-xs font-medium *:flex *:gap-1 *:items-center *:text-secondary-300 lg:text-sm lg:*:gap-2">
+        <div className="flex flex-wrap justify-between gap-2 text-xs font-medium *:flex *:gap-1 *:items-center *:text-secondary-300 xl:text-sm xl:*:gap-2">
           <p>
             <span>
               <Fuel />
@@ -89,12 +90,12 @@ const CarCard = ({
           </p>
         </div>
       </CardContent>
-      <CardFooter className="justify-between gap-2 flex-wrap">
-        <p className="text-secondary-500 font-bold">
+      <CardFooter className="justify-between gap-2">
+        <p className="text-secondary-500 font-bold whitespace-nowrap">
           {formattedPrice}/
           <span className="text-xs text-secondary-300">day</span>
         </p>
-        <Button size={"lg"} className="text-base" asChild>
+        <Button size={"lg"} className="text-base shrink-0" asChild>
           <Link href={`cars/${id}`}>Rent Now</Link>
         </Button>
       </CardFooter>

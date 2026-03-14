@@ -40,7 +40,7 @@ export default async function Favourites() {
           {cars.length === 1 ? `${cars.length} car` : `${cars.length} cars`}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 xl:gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 xl:gap-8 items-start">
         {cars.map((car) => (
           <CarCard
             id={car.id}
