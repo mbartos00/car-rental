@@ -12,13 +12,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { updateUserSchema, userSchema } from 'src/shared/schemas/user.schema';
-import { ValidUpdatedUser, ValidUser } from 'src/shared/types';
+import { JwtUser, ValidUpdatedUser, ValidUser } from 'src/shared/types';
 import { ZodPipe } from 'src/shared/zod-pipe/zod.pipe';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { User } from 'src/auth/decorators/user.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 @Controller('users')
@@ -41,6 +42,31 @@ export class UsersController {
   @Get()
   async findAll() {
     return this.usersService.getAllUsers();
+  }
+
+  @Roles(Role.USER, Role.ADMIN)
+  @Get('me')
+  async getMe(@User() user: JwtUser) {
+    return this.usersService.findOneById(user.id);
+  }
+
+  @Roles(Role.USER, Role.ADMIN)
+  @Patch('me')
+  async updateMe(
+    @User() user: JwtUser,
+    @Body(new ZodPipe(updateUserSchema)) payload: ValidUpdatedUser,
+  ) {
+    const { repeatPassword: _repeat, oldPassword, ...userPayload } = payload;
+
+    const updatedUser = await this.usersService.update(
+      user.id,
+      userPayload,
+      oldPassword,
+    );
+
+    if (updatedUser) {
+      return { message: 'User updated' };
+    }
   }
 
   @Get('user')

@@ -38,6 +38,7 @@ describe('UsersController', () => {
             create: jest.fn(),
             getAllUsers: jest.fn(),
             findOneByEmail: jest.fn(),
+            findOneById: jest.fn(),
             update: jest.fn(),
             remove: jest.fn(),
           },
@@ -123,6 +124,44 @@ describe('UsersController', () => {
 
       await expect(controller.findOne('missing@example.com')).rejects.toThrow(
         NotFoundException,
+      );
+    });
+  });
+
+  describe('getMe', () => {
+    it("should return the requester's own profile", async () => {
+      const jwtUser = { id: '1', email: 'test@example.com', role: Role.USER };
+      usersService.findOneById.mockResolvedValue(mockUser);
+
+      const result = await controller.getMe(jwtUser);
+
+      expect(result).toEqual(mockUser);
+      expect(usersService.findOneById).toHaveBeenCalledWith('1');
+    });
+  });
+
+  describe('updateMe', () => {
+    it('should update the requester using the id from the JWT', async () => {
+      const jwtUser = { id: '1', email: 'test@example.com', role: Role.USER };
+      usersService.update.mockResolvedValue(mockUpdateUser);
+
+      const result = await controller.updateMe(jwtUser, {
+        ...mockUpdateUser,
+        oldPassword: 'OldPass1!',
+        password: 'NewPass1!',
+        repeatPassword: 'NewPass1!',
+      });
+
+      expect(result).toEqual({ message: 'User updated' });
+      expect(usersService.update).toHaveBeenCalledWith(
+        '1',
+        {
+          firstName: mockUpdateUser.firstName,
+          lastName: mockUpdateUser.lastName,
+          email: mockUpdateUser.email,
+          password: 'NewPass1!',
+        },
+        'OldPass1!',
       );
     });
   });
