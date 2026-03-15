@@ -1,8 +1,14 @@
 "use server";
 
 import { loginSchema } from "@/schemas/loginSchema";
+import { profileSchema } from "@/schemas/profileSchema";
 import { registerSchema } from "@/schemas/registerSchema";
-import { ActionResult, LoginFormState, RegisterFormState } from "@/types";
+import {
+  ActionResult,
+  LoginFormState,
+  ProfileFormState,
+  RegisterFormState,
+} from "@/types";
 import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
@@ -78,6 +84,54 @@ export const logoutAction = async (): Promise<void> => {
 
   cookieStore.delete(ACCESS_TOKEN_COOKIE);
   cookieStore.delete(REFRESH_TOKEN_COOKIE);
+};
+
+export const updateProfileFormAction = async (
+  _: ProfileFormState,
+  formData: FormData
+): Promise<ProfileFormState> => {
+  const { errors: formErrors, data } = validateFormFields(
+    profileSchema,
+    formData
+  );
+
+  if (formErrors) {
+    return { formErrors, success: false };
+  }
+
+  try {
+    const res = await apiFetch("/users/me", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+
+    const resData = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      return {
+        success: false,
+        error: resData ?? {
+          message: "Something went wrong",
+          error: "Error",
+          statusCode: res.status,
+        },
+      };
+    }
+
+    revalidatePath(ROUTES.USER);
+
+    return { success: true, message: resData?.message ?? "Profile updated" };
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return {
+      success: false,
+      error: {
+        message: "Network error or invalid response",
+        error: "NetworkError",
+        statusCode: 0,
+      },
+    };
+  }
 };
 
 export const toggleFavouriteAction = async (

@@ -177,3 +177,26 @@ export type ActionResult = {
   success: boolean;
   message: string;
 };
+
+export type Profile = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  createdAt: string;
+};
+
+export type ProfileFormState = {
+  formErrors?: {
+    firstName?: string[];
+    lastName?: string[];
+    email?: string[];
+    oldPassword?: string[];
+    password?: string[];
+    repeatPassword?: string[];
+  };
+  error?: ApiErrorResponse;
+  success?: boolean;
+  message?: string;
+};

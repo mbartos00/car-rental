@@ -5,11 +5,25 @@ import {
   LoginApiResult,
   LoginUserInput,
   Pagination,
+  Profile,
   RegisterFormState,
   RegisterUserInput,
 } from "@/types";
 import { REFRESH_TOKEN_COOKIE } from "@/utlis/authCookies";
 import apiFetch from "./apiFetch";
+
+export const getMe = async (): Promise<Profile | null> => {
+  try {
+    const res = await apiFetch("/users/me");
+
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    return null;
+  }
+};
 
 export const getFavourites = async (): Promise<Car[] | null> => {
   try {
