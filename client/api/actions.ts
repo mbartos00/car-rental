@@ -155,6 +155,7 @@ export const toggleFavouriteAction = async (
     }
 
     revalidatePath(ROUTES.CARS);
+    revalidatePath(`${ROUTES.CARS}/[id]`, "page");
     revalidatePath(ROUTES.FAVOURITES);
 
     return {

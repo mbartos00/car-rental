@@ -1,7 +1,9 @@
-import { cn, formatPriceToUSD, toTitleCase } from "@/lib/utils";
+import { getFavourites } from "@/api/api";
+import { getSession } from "@/api/session";
+import { formatPriceToUSD, toTitleCase } from "@/lib/utils";
 import { Car } from "@/types";
-import { Heart } from "lucide-react";
 import Link from "next/link";
+import FavouriteButton from "./FavouriteButton";
 import RatingStars from "./RatingStars";
 import { Button } from "./ui/button";
 import {
@@ -13,8 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { getSession } from "@/api/session";
 
 const CarDescription = async ({
   id,
@@ -32,7 +32,8 @@ const CarDescription = async ({
   const session = await getSession();
   const isLoggedIn = !!session;
 
-  const isInFavourites = false; //TODO:Replace with logic
+  const favourites = isLoggedIn ? await getFavourites() : null;
+  const isInFavourites = !!favourites?.some((car) => car.id === id);
 
   return (
     <Card className="md:w-3/4">
@@ -49,34 +50,11 @@ const CarDescription = async ({
           </p>
         </div>
         <CardAction>
-          <Tooltip>
-            <TooltipTrigger className="size-6 hover:bg-transparent group">
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={!isLoggedIn}
-                asChild
-                className="size-6 hover:bg-transparent group"
-              >
-                <Heart
-                  className={cn(
-                    "size-6 stroke-secondary-300 transition-all",
-                    isInFavourites && "fill-red-500 stroke-0",
-                    isLoggedIn &&
-                      "group-hover:fill-red-500 group-hover:stroke-0",
-                    !isLoggedIn && "stroke-secondary-100 fill-secondary-100",
-                  )}
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isLoggedIn && !isInFavourites && <p>Add to favourites</p>}
-
-              {isLoggedIn && isInFavourites && <p>Remove from favourites</p>}
-
-              {!isLoggedIn && <p>Please log in</p>}
-            </TooltipContent>
-          </Tooltip>
+          <FavouriteButton
+            carId={id}
+            isLoggedIn={isLoggedIn}
+            isInFavourites={isInFavourites}
+          />
         </CardAction>
       </CardHeader>
       <CardContent>
