@@ -5,7 +5,7 @@ const CARDS_COUNT = 9;
 
 export default function Loading() {
   return (
-    <section className="py-8 px-6 xl:grid xl:grid-cols-10 xl:px-0 xl:py-0">
+    <section className="py-8 px-6 xl:grid xl:grid-cols-10 xl:px-0 xl:py-0 opacity-0 [animation:skeleton-appear_0.2s_ease_0.25s_forwards]">
       <div className="hidden xl:block xl:col-span-3 2xl:col-span-2 bg-primary-0 xl:p-8">
         <CarFiltersSkeleton />
       </div>

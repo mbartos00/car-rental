@@ -143,3 +143,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes skeleton-appear {
+  to {
+    opacity: 1;
+  }
+}
