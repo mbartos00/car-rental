@@ -7,7 +7,9 @@ import { UsersModule } from './users/users.module';
 import { CarsModule } from './cars/cars.module';
 import { FavouritesModule } from './favourites/favourites.module';
 import { ReviewsModule } from './reviews/reviews.module';
-import { BilingModule } from './biling/biling.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { LocationsModule } from './locations/locations.module';
+import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -18,7 +20,9 @@ import { ConfigModule } from '@nestjs/config';
     CarsModule,
     FavouritesModule,
     ReviewsModule,
-    BilingModule,
+    ReservationsModule,
+    LocationsModule,
+    PromoCodesModule,
     ConfigModule.forRoot(),
   ],
   controllers: [AppController],
