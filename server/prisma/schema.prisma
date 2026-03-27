@@ -37,17 +37,54 @@ enum Gearbox {
   AUTOMATIC
 }
 
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+type BillingDetails {
+  name        String
+  phoneNumber String
+  address     String
+  city        String
+}
+
+model Location {
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  name                String        @unique
+  pickupReservations  Reservation[] @relation("PickupLocation")
+  dropoffReservations Reservation[] @relation("DropoffLocation")
+  createdAt           DateTime      @default(now())
+}
+
+model PromoCode {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  code            String   @unique
+  discountPercent Int
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
 model Reservation {
-  id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  startDate     DateTime
-  endDate       DateTime
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String     @db.ObjectId
-  car           Car        @relation(fields: [carId], references: [id], onDelete: Cascade)
-  carId         String     @db.ObjectId
-  billingInfo   BilingInfo @relation(fields: [billingInfoId], references: [id], onDelete: Cascade)
-  billingInfoId String     @db.ObjectId
-  createdAt     DateTime   @default(now())
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  startDate         DateTime
+  endDate           DateTime
+  status            ReservationStatus @default(CONFIRMED)
+  totalPrice        Float
+  promoCode         String?
+  discountPercent   Int?
+  paymentIntentId   String            @unique
+  marketingConsent  Boolean           @default(false)
+  billingInfo       BillingDetails
+  pickupLocation    Location          @relation("PickupLocation", fields: [pickupLocationId], references: [id])
+  pickupLocationId  String            @db.ObjectId
+  dropoffLocation   Location          @relation("DropoffLocation", fields: [dropoffLocationId], references: [id])
+  dropoffLocationId String            @db.ObjectId
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String            @db.ObjectId
+  car               Car               @relation(fields: [carId], references: [id], onDelete: Cascade)
+  carId             String            @db.ObjectId
+  createdAt         DateTime          @default(now())
 }
 
 model User {
@@ -60,25 +97,12 @@ model User {
   reservations   Reservation[]
   reviews        Review[]
   favouritesList FavouritesList?
-  bilingInfo     BilingInfo?
   createdAt      DateTime        @default(now())
 }
 
 enum Role {
   USER
   ADMIN
-}
-
-model BilingInfo {
-  id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String        @unique @db.ObjectId
-  phoneNumber String
-  address     String
-  city        String
-  postalCode  String
-  reservation Reservation[]
-  createdAt   DateTime      @default(now())
 }
 
 model FavouritesList {

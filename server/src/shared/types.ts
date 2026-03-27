@@ -12,7 +12,16 @@ import {
 } from './schemas/user.schema';
 import { addToFavouritesSchema } from './schemas/favourites.schema';
 import { reviewSchema, updateReviewSchema } from './schemas/reviews.schema';
-import { bilingSchema, updateBilingSchema } from './schemas/biling.schema';
+import {
+  createReservationSchema,
+  paymentIntentSchema,
+} from './schemas/reservations.schema';
+import { locationSchema } from './schemas/locations.schema';
+import {
+  promoCodeSchema,
+  updatePromoCodeSchema,
+  validatePromoQuerySchema,
+} from './schemas/promo-codes.schema';
 
 declare module 'express' {
   interface Request {
@@ -25,6 +34,13 @@ export type UserWithoutPassword = Omit<User, 'password'>;
 export type ValidUser = z.infer<typeof userSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ValidUpdatedUser = z.infer<typeof updateUserSchema>;
+
+export type PaymentIntentSchema = z.infer<typeof paymentIntentSchema>;
+export type CreateReservationSchema = z.infer<typeof createReservationSchema>;
+export type LocationSchema = z.infer<typeof locationSchema>;
+export type PromoCodeSchema = z.infer<typeof promoCodeSchema>;
+export type UpdatePromoCodeSchema = z.infer<typeof updatePromoCodeSchema>;
+export type ValidatePromoQuery = z.infer<typeof validatePromoQuerySchema>;
 
 export type JwtPayload = {
   sub: string;
@@ -65,6 +81,3 @@ export type ReviewSchema = z.infer<typeof reviewSchema>;
 export type UpdateReviewSchema = z.infer<typeof updateReviewSchema>;
 
 export type PrismaError = Prisma.PrismaClientKnownRequestError;
-
-export type BilingSchema = z.infer<typeof bilingSchema>;
-export type UpdateBilingSchema = z.infer<typeof updateBilingSchema>;
