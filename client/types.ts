@@ -119,7 +119,6 @@ export type User = {
   reservations?: Reservation[];
   reviews?: Review[];
   favouritesList: FavouritesList;
-  bilingInfo?: BilingInfo;
 };
 
 export type UserRole = "USER" | "ADMIN";
@@ -142,22 +141,27 @@ export type LoginApiResult =
   | { success: true; accessToken: string; refreshToken: string }
   | { success: false; error: ApiErrorResponse };
 
+export type ReservationStatus = "CONFIRMED" | "CANCELLED";
+
 export type Reservation = {
   id: string;
-  startDate: Date;
-  endDate: Date;
-  user: User;
+  startDate: string;
+  endDate: string;
+  status: ReservationStatus;
+  totalPrice: number;
+  promoCode: string | null;
+  discountPercent: number | null;
+  marketingConsent: boolean;
+  billingInfo: {
+    name: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+  };
   car: Car;
-  bilingInfo: BilingInfo;
-};
-
-export type BilingInfo = {
-  id: string;
-  phoneNumber: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  reservation: Reservation[];
+  pickupLocation: Location;
+  dropoffLocation: Location;
+  createdAt: string;
 };
 
 export type FavouritesList = {
@@ -176,6 +180,57 @@ export type FavouritesResponse = {
 export type ActionResult = {
   success: boolean;
   message: string;
+};
+
+export type Location = {
+  id: string;
+  name: string;
+};
+
+export type BookedRange = {
+  startDate: string;
+  endDate: string;
+};
+
+export type PromoValidationResult =
+  | { valid: true; discountPercent: number }
+  | { valid: false };
+
+export type AppliedPromo = {
+  code: string;
+  discountPercent: number;
+};
+
+export type PaymentIntentPayload = {
+  carId: string;
+  startDate: string;
+  endDate: string;
+  pickupLocationId: string;
+  dropoffLocationId: string;
+  promoCode?: string;
+};
+
+export type PaymentIntentResult =
+  | {
+      success: true;
+      clientSecret: string;
+      paymentIntentId: string;
+      days: number;
+      subtotal: number;
+      discountPercent: number;
+      totalPrice: number;
+    }
+  | { success: false; error: ApiErrorResponse };
+
+export type FinalizeReservationPayload = PaymentIntentPayload & {
+  paymentIntentId: string;
+  marketingConsent: boolean;
+  billingInfo: {
+    name: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+  };
 };
 
 export type Profile = {

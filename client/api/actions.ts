@@ -5,8 +5,12 @@ import { profileSchema } from "@/schemas/profileSchema";
 import { registerSchema } from "@/schemas/registerSchema";
 import {
   ActionResult,
+  FinalizeReservationPayload,
   LoginFormState,
+  PaymentIntentPayload,
+  PaymentIntentResult,
   ProfileFormState,
+  PromoValidationResult,
   RegisterFormState,
 } from "@/types";
 import {
@@ -131,6 +135,119 @@ export const updateProfileFormAction = async (
         statusCode: 0,
       },
     };
+  }
+};
+
+export const createPaymentIntentAction = async (
+  payload: PaymentIntentPayload
+): Promise<PaymentIntentResult> => {
+  try {
+    const res = await apiFetch("/reservations/payment-intent", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      return {
+        success: false,
+        error: data ?? {
+          message: "Something went wrong",
+          error: "Error",
+          statusCode: res.status,
+        },
+      };
+    }
+
+    return { success: true, ...data };
+  } catch (error) {
+    console.error("Payment intent error:", error);
+    return {
+      success: false,
+      error: {
+        message: "Network error or invalid response",
+        error: "NetworkError",
+        statusCode: 0,
+      },
+    };
+  }
+};
+
+export const finalizeReservationAction = async (
+  payload: FinalizeReservationPayload
+): Promise<ActionResult> => {
+  try {
+    const res = await apiFetch("/reservations", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      const message =
+        typeof data?.message === "string"
+          ? data.message
+          : "Something went wrong";
+
+      return { success: false, message };
+    }
+
+    revalidatePath(ROUTES.USER);
+
+    return { success: true, message: "Reservation confirmed" };
+  } catch (error) {
+    console.error("Reservation error:", error);
+    return { success: false, message: "Network error" };
+  }
+};
+
+export const cancelReservationAction = async (
+  id: string
+): Promise<ActionResult> => {
+  try {
+    const res = await apiFetch(`/reservations/${id}/cancel`, {
+      method: "PATCH",
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      const message =
+        typeof data?.message === "string"
+          ? data.message
+          : "Something went wrong";
+
+      return { success: false, message };
+    }
+
+    revalidatePath(ROUTES.USER);
+
+    return {
+      success: true,
+      message: "Reservation cancelled and payment refunded",
+    };
+  } catch (error) {
+    console.error("Reservation cancel error:", error);
+    return { success: false, message: "Network error" };
+  }
+};
+
+export const validatePromoCodeAction = async (
+  code: string
+): Promise<PromoValidationResult> => {
+  try {
+    const res = await fetch(
+      `${process.env.API_URL}/promo-codes/validate?code=${encodeURIComponent(code)}`
+    );
+
+    if (!res.ok) return { valid: false };
+
+    return await res.json();
+  } catch (error) {
+    console.error("Promo validation error:", error);
+    return { valid: false };
   }
 };
 

@@ -1,4 +1,5 @@
 import { getFavourites } from "@/api/api";
+import { ROUTES } from "@/constants/routes";
 import { getSession } from "@/api/session";
 import { formatPriceToUSD, toTitleCase } from "@/lib/utils";
 import { Car } from "@/types";
@@ -88,7 +89,7 @@ const CarDescription = async ({
           <span className="text-xs text-secondary-300">day</span>
         </p>
         <Button size={"lg"} className="text-base md:p-8" asChild>
-          <Link href={`reservation/${id}`}>Rent Now</Link>
+          <Link href={`${ROUTES.RESERVATION}/${id}`}>Rent Now</Link>
         </Button>
       </CardFooter>
     </Card>

@@ -1,16 +1,49 @@
 import {
+  BookedRange,
   Car,
   CarFilters,
   FavouritesResponse,
+  Location,
   LoginApiResult,
   LoginUserInput,
   Pagination,
   Profile,
+  Reservation,
   RegisterFormState,
   RegisterUserInput,
 } from "@/types";
 import { REFRESH_TOKEN_COOKIE } from "@/utlis/authCookies";
 import apiFetch from "./apiFetch";
+
+export const getLocations = async (): Promise<Location[]> => {
+  const res = await fetch(`${process.env.API_URL}/locations`);
+
+  return await res.json();
+};
+
+export const getBookedRanges = async (
+  carId: string
+): Promise<BookedRange[]> => {
+  const res = await fetch(
+    `${process.env.API_URL}/reservations/car/${carId}`,
+    { cache: "no-store" }
+  );
+
+  return await res.json();
+};
+
+export const getMyReservations = async (): Promise<Reservation[] | null> => {
+  try {
+    const res = await apiFetch("/reservations");
+
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (error) {
+    console.error("Reservations fetch error:", error);
+    return null;
+  }
+};
 
 export const getMe = async (): Promise<Profile | null> => {
   try {

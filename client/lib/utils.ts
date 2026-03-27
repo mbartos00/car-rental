@@ -21,6 +21,18 @@ export const formatPriceToUSD = (price: number, fractionDigits = 2) => {
   }).format(price || 0);
 };
 
+export const combineDateTime = (date: Date, time: string) => {
+  const [hours, minutes] = time.split(":").map(Number);
+  const combined = new Date(date);
+  combined.setHours(hours, minutes, 0, 0);
+
+  return combined;
+};
+
+export const calculateRentalDays = (start: Date, end: Date) => {
+  return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86_400_000));
+};
+
 export const formatDate = (inputDate: string) => {
   const date = new Date(inputDate);
 
