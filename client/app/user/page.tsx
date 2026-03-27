@@ -1,5 +1,6 @@
-import { getMe } from "@/api/api";
+import { getMe, getMyReservations } from "@/api/api";
 import ProfileForm from "@/components/ProfileForm";
+import ReservationListItem from "@/components/ReservationListItem";
 import {
   Card,
   CardContent,
@@ -10,7 +11,10 @@ import {
 import { formatDate } from "@/lib/utils";
 
 export default async function User() {
-  const profile = await getMe();
+  const [profile, reservations] = await Promise.all([
+    getMe(),
+    getMyReservations(),
+  ]);
 
   if (!profile) {
     return (
@@ -23,8 +27,8 @@ export default async function User() {
   }
 
   return (
-    <div className="flex min-h-[80svh] items-start justify-center p-4 lg:p-8">
-      <Card className="w-full max-w-md">
+    <section className="py-8 px-6 lg:px-16 2xl:w-4/5 2xl:mx-auto grid gap-6 items-start lg:grid-cols-[minmax(340px,420px)_1fr]">
+      <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-secondary-500 text-2xl font-bold text-center">
             My Profile
@@ -37,6 +41,35 @@ export default async function User() {
           <ProfileForm profile={profile} />
         </CardContent>
       </Card>
-    </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-secondary-500 text-2xl font-bold">
+            My Reservations
+          </CardTitle>
+          <CardDescription className="text-secondary-400">
+            Reservations can be cancelled up to 72 hours before pick-up
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {reservations === null && (
+            <p className="text-secondary-300 font-medium">
+              Could not load your reservations
+            </p>
+          )}
+          {reservations?.length === 0 && (
+            <p className="text-secondary-300 font-medium">
+              No reservations yet
+            </p>
+          )}
+          {reservations?.map((reservation) => (
+            <ReservationListItem
+              key={reservation.id}
+              reservation={reservation}
+            />
+          ))}
+        </CardContent>
+      </Card>
+    </section>
   );
 }
