@@ -43,6 +43,10 @@ describe('ReviewsService', () => {
   });
 
   describe('create', () => {
+    beforeEach(() => {
+      prismaMock.reservation.count.mockResolvedValue(1);
+    });
+
     it('should create a review', async () => {
       prismaMock.review.create.mockResolvedValue(mockReview);
 
@@ -64,6 +68,24 @@ describe('ReviewsService', () => {
           userId: true,
         },
       });
+    });
+
+    it('should throw ForbiddenException without a completed reservation', async () => {
+      prismaMock.reservation.count.mockResolvedValue(0);
+
+      await expect(reviewsService.create('user1', mockReview)).rejects.toThrow(
+        ForbiddenException,
+      );
+
+      expect(prismaMock.reservation.count).toHaveBeenCalledWith({
+        where: {
+          userId: 'user1',
+          carId: mockReview.carId,
+          status: 'CONFIRMED',
+          endDate: { lt: expect.any(Date) },
+        },
+      });
+      expect(prismaMock.review.create).not.toHaveBeenCalled();
     });
 
     it('should throw ConflictException if review already exists', async () => {

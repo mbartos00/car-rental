@@ -45,6 +45,7 @@ export class CarsService {
           reviews: {
             select: {
               id: true,
+              userId: true,
               user: {
                 select: {
                   firstName: true,

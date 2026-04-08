@@ -170,7 +170,11 @@ export class ReservationsService {
   async findMine(userId: string) {
     return this.prismaService.reservation.findMany({
       where: { userId },
-      include: { car: true, pickupLocation: true, dropoffLocation: true },
+      include: {
+        car: { include: { reviews: { where: { userId } } } },
+        pickupLocation: true,
+        dropoffLocation: true,
+      },
       orderBy: { startDate: 'desc' },
     });
   }

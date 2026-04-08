@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ReservationStatus } from '@prisma/client';
 import { PrismaService } from 'src/db/prisma.service';
 import { ReviewSchema, UpdateReviewSchema } from 'src/shared/types';
 
@@ -12,6 +13,21 @@ export class ReviewsService {
   constructor(private prismaService: PrismaService) {}
 
   async create(userId: string, reviewPayload: ReviewSchema) {
+    const completedReservations = await this.prismaService.reservation.count({
+      where: {
+        userId,
+        carId: reviewPayload.carId,
+        status: ReservationStatus.CONFIRMED,
+        endDate: { lt: new Date() },
+      },
+    });
+
+    if (completedReservations === 0) {
+      throw new ForbiddenException(
+        'You can review a car only after your reservation ends',
+      );
+    }
+
     const isReviewExist = await this.prismaService.review.count({
       where: {
         userId,
