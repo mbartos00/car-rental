@@ -30,7 +30,7 @@ export default async function Car({
         />
       </div>
       <CarReviews reviews={car.reviews} reviewCount={car.reviewCount} />
-      <PopularCars wrapperClassName="lg:px-0" />
+      <PopularCars wrapperClassName="lg:px-0" excludeId={car.id} />
     </section>
   );
 }

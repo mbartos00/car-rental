@@ -13,6 +13,7 @@ import {
   RegisterUserInput,
 } from "@/types";
 import { REFRESH_TOKEN_COOKIE } from "@/utlis/authCookies";
+import { cache } from "react";
 import apiFetch from "./apiFetch";
 
 export const getLocations = async (): Promise<Location[]> => {
@@ -58,7 +59,7 @@ export const getMe = async (): Promise<Profile | null> => {
   }
 };
 
-export const getFavourites = async (): Promise<Car[] | null> => {
+export const getFavourites = cache(async (): Promise<Car[] | null> => {
   try {
     const res = await apiFetch("/favourites");
 
@@ -70,6 +71,32 @@ export const getFavourites = async (): Promise<Car[] | null> => {
   } catch (error) {
     console.error("Favourites fetch error:", error);
     return null;
+  }
+});
+
+export const getPopularCars = async (limit = 8): Promise<Car[]> => {
+  try {
+    const res = await apiFetch(`/cars/popular?limit=${limit}`);
+
+    if (!res.ok) return [];
+
+    return await res.json();
+  } catch (error) {
+    console.error("Popular cars fetch error:", error);
+    return [];
+  }
+};
+
+export const getRecommendedCars = async (limit = 8): Promise<Car[]> => {
+  try {
+    const res = await apiFetch(`/cars/recommended?limit=${limit}`);
+
+    if (!res.ok) return [];
+
+    return await res.json();
+  } catch (error) {
+    console.error("Recommended cars fetch error:", error);
+    return [];
   }
 };
 
