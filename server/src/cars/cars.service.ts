@@ -43,6 +43,7 @@ export class CarsService {
         where: { id },
         include: {
           reviews: {
+            orderBy: { createdAt: 'desc' },
             select: {
               id: true,
               userId: true,
