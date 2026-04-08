@@ -51,7 +51,7 @@ describe('CarsService', () => {
       tankCapacity: 60,
       gearbox: Gearbox.AUTOMATIC,
       seats: 5,
-      favouritesListId: null,
+      favouritesListIds: [],
       createdAt: new Date(),
     };
 
@@ -350,6 +350,110 @@ describe('CarsService', () => {
       await expect(carsService.remove('nonexistent-id')).rejects.toThrow(
         'Car not found',
       );
+    });
+  });
+
+  describe('getPopularCars', () => {
+    const carA = { ...mockCar, id: 'carA', favouritesListIds: [] };
+    const carB = {
+      ...mockCar,
+      id: 'carB',
+      favouritesListIds: ['list1', 'list2'],
+    };
+    const carC = { ...mockCar, id: 'carC', favouritesListIds: ['list1'] };
+
+    beforeEach(() => {
+      prismaMock.car.findMany.mockResolvedValue([carA, carB, carC] as never);
+      prismaMock.review.groupBy.mockResolvedValue([] as never);
+    });
+
+    it('should rank reservations above favourites', async () => {
+      prismaMock.reservation.groupBy.mockResolvedValue([
+        { carId: 'carA', _count: 1 },
+      ] as never);
+
+      const result = await carsService.getPopularCars(8);
+
+      expect(result.map((car) => car.id)).toEqual(['carA', 'carB', 'carC']);
+    });
+
+    it('should respect the limit', async () => {
+      prismaMock.reservation.groupBy.mockResolvedValue([] as never);
+
+      const result = await carsService.getPopularCars(2);
+
+      expect(result).toHaveLength(2);
+    });
+  });
+
+  describe('getRecommendedCars', () => {
+    const sedan = {
+      ...mockCar,
+      id: 'sedan1',
+      carType: CarType.SEDAN,
+      price: 100,
+      seats: 4,
+      favouritesListIds: [],
+    };
+    const sedanSimilar = {
+      ...mockCar,
+      id: 'sedan2',
+      carType: CarType.SEDAN,
+      price: 110,
+      seats: 4,
+      favouritesListIds: [],
+    };
+    const expensiveSuv = {
+      ...mockCar,
+      id: 'suv1',
+      carType: CarType.SUV,
+      price: 900,
+      seats: 7,
+      favouritesListIds: [],
+    };
+
+    beforeEach(() => {
+      prismaMock.car.findMany.mockResolvedValue([
+        sedan,
+        sedanSimilar,
+        expensiveSuv,
+      ] as never);
+      prismaMock.review.groupBy.mockResolvedValue([
+        { carId: 'suv1', _avg: { rating: 5 } },
+      ] as never);
+    });
+
+    it('should return top rated cars for guests', async () => {
+      const result = await carsService.getRecommendedCars(null, 8);
+
+      expect(result[0].id).toBe('suv1');
+    });
+
+    it('should recommend similar cars excluding the user history', async () => {
+      prismaMock.favouritesList.findUnique.mockResolvedValue({
+        id: 'list1',
+        userId: 'user1',
+        cars: [sedan],
+      } as never);
+      prismaMock.reservation.findMany.mockResolvedValue([] as never);
+
+      const result = await carsService.getRecommendedCars('user1', 8);
+
+      expect(result[0].id).toBe('sedan2');
+      expect(result.map((car) => car.id)).not.toContain('sedan1');
+    });
+
+    it('should fall back to top rated when the user has no history', async () => {
+      prismaMock.favouritesList.findUnique.mockResolvedValue({
+        id: 'list1',
+        userId: 'user1',
+        cars: [],
+      } as never);
+      prismaMock.reservation.findMany.mockResolvedValue([] as never);
+
+      const result = await carsService.getRecommendedCars('user1', 8);
+
+      expect(result[0].id).toBe('suv1');
     });
   });
 

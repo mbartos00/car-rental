@@ -42,7 +42,7 @@ describe('ReservationsService', () => {
     tankCapacity: 50,
     gearbox: Gearbox.MANUAL,
     seats: 4,
-    favouritesListId: null,
+    favouritesListIds: [],
     createdAt: new Date(),
   } as Car;
 

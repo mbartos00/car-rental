@@ -19,9 +19,9 @@ model Car {
   seats            Int
   reviews          Review[]
   reservations     Reservation[]
-  favouritesList   FavouritesList? @relation(fields: [favouritesListId], references: [id], onDelete: SetNull)
-  favouritesListId String?         @db.ObjectId
-  createdAt        DateTime        @default(now())
+  favouritesListIds String[]         @db.ObjectId
+  favouritesLists   FavouritesList[] @relation(fields: [favouritesListIds], references: [id])
+  createdAt         DateTime         @default(now())
 }
 
 enum CarType {
@@ -109,7 +109,8 @@ model FavouritesList {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @unique @db.ObjectId
-  cars      Car[]
+  carIds    String[] @db.ObjectId
+  cars      Car[]    @relation(fields: [carIds], references: [id])
   createdAt DateTime @default(now())
 }
 

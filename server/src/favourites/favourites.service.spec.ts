@@ -35,13 +35,14 @@ describe('FavouritesService', () => {
       tankCapacity: 60,
       gearbox: Gearbox.AUTOMATIC,
       seats: 5,
-      favouritesListId: 'fav-list-1',
+      favouritesListIds: ['fav-list-1'],
       createdAt: new Date(),
     };
 
     mockFavouritesList = {
       id: 'fav-list-1',
       userId: 'user-1',
+      carIds: [],
       cars: [mockCar],
       createdAt: new Date(),
     };
