@@ -2,6 +2,7 @@ import { cn, formatDate, formatPriceToUSD } from "@/lib/utils";
 import { Reservation } from "@/types";
 import Image from "next/image";
 import CancelReservationButton from "./CancelReservationButton";
+import ReviewReservationButton from "./ReviewReservationButton";
 
 const CANCELLATION_WINDOW_MS = 72 * 60 * 60 * 1000;
 
@@ -11,6 +12,8 @@ const ReservationListItem = ({ reservation }: { reservation: Reservation }) => {
     !isCancelled &&
     new Date(reservation.startDate).getTime() - Date.now() >
       CANCELLATION_WINDOW_MS;
+  const hasEnded =
+    !isCancelled && new Date(reservation.endDate).getTime() < Date.now();
 
   return (
     <div
@@ -50,6 +53,13 @@ const ReservationListItem = ({ reservation }: { reservation: Reservation }) => {
           {reservation.status}
         </span>
         {canCancel && <CancelReservationButton id={reservation.id} />}
+        {hasEnded && (
+          <ReviewReservationButton
+            carId={reservation.car.id}
+            carName={reservation.car.name}
+            review={reservation.car.reviews?.[0]}
+          />
+        )}
       </div>
     </div>
   );

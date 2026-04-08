@@ -25,6 +25,7 @@ export type Gearbox = "MANUAL" | "AUTOMATIC";
 
 export type Review = {
   id: string;
+  userId: string;
   description: string;
   rating: number;
   carId: string;

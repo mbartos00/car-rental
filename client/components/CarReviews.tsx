@@ -1,5 +1,6 @@
 import { formatDate, toTitleCase } from "@/lib/utils";
 import { Review } from "@/types";
+import MyReviewSection from "./MyReviewSection";
 import RatingStars from "./RatingStars";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
@@ -7,9 +8,23 @@ import { Separator } from "./ui/separator";
 type Props = {
   reviewCount?: number;
   reviews: Review[];
+  carId: string;
+  sessionUserId?: string;
+  canReview: boolean;
 };
 
-const CarReviews = ({ reviewCount, reviews }: Props) => {
+const CarReviews = ({
+  reviewCount,
+  reviews,
+  carId,
+  sessionUserId,
+  canReview,
+}: Props) => {
+  const myReview = sessionUserId
+    ? reviews.find((review) => review.userId === sessionUserId)
+    : undefined;
+  const otherReviews = reviews.filter((review) => review.id !== myReview?.id);
+
   return (
     <Card>
       <CardHeader className="flex gap-3 items-center">
@@ -21,7 +36,12 @@ const CarReviews = ({ reviewCount, reviews }: Props) => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {reviews.map((review, idx) => (
+        <MyReviewSection
+          carId={carId}
+          myReview={myReview}
+          canReview={canReview}
+        />
+        {otherReviews.map((review, idx) => (
           <section key={review.id}>
             <div className="flex justify-between items-center">
               <p className="font-bold text-secondary-500 text-base">
@@ -38,11 +58,14 @@ const CarReviews = ({ reviewCount, reviews }: Props) => {
             <p className="font-regular text-secondary-400 text-base">
               {toTitleCase(review.description)}
             </p>
-            {idx !== reviews.length - 1 && (
+            {idx !== otherReviews.length - 1 && (
               <Separator className="my-2 bg-secondary-300/30" />
             )}
           </section>
         ))}
+        {reviews.length === 0 && !canReview && (
+          <p className="text-secondary-300 font-medium">No reviews yet</p>
+        )}
       </CardContent>
     </Card>
   );

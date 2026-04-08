@@ -1,4 +1,5 @@
-import { getCar } from "@/api/api";
+import { getCar, getMyReservations } from "@/api/api";
+import { getSession } from "@/api/session";
 import CarDescription from "@/components/CarDescription";
 import CarDetailsCarousel from "@/components/CarDetailsCarousel";
 import CarReviews from "@/components/CarReviews";
@@ -10,7 +11,16 @@ export default async function Car({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const car = await getCar(id);
+
+  const [car, session] = await Promise.all([getCar(id), getSession()]);
+
+  const reservations = session ? await getMyReservations() : null;
+  const canReview = !!reservations?.some(
+    (reservation) =>
+      reservation.car.id === id &&
+      reservation.status === "CONFIRMED" &&
+      new Date(reservation.endDate) < new Date()
+  );
 
   return (
     <section className="flex flex-col gap-8 py-8 px-6 2xl:w-4/5 2xl:mx-auto">
@@ -29,7 +39,13 @@ export default async function Car({
           averageReview={car.averageReview}
         />
       </div>
-      <CarReviews reviews={car.reviews} reviewCount={car.reviewCount} />
+      <CarReviews
+        reviews={car.reviews}
+        reviewCount={car.reviewCount}
+        carId={car.id}
+        sessionUserId={session?.id}
+        canReview={canReview}
+      />
       <PopularCars wrapperClassName="lg:px-0" excludeId={car.id} />
     </section>
   );

@@ -203,6 +203,75 @@ export const finalizeReservationAction = async (
   }
 };
 
+const reviewMutation = async (
+  path: string,
+  method: "POST" | "PATCH" | "DELETE",
+  carId: string,
+  body?: Record<string, unknown>
+): Promise<ActionResult> => {
+  try {
+    const res = await apiFetch(path, {
+      method,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      const message =
+        typeof data?.message === "string"
+          ? data.message
+          : "Something went wrong";
+
+      return { success: false, message };
+    }
+
+    revalidatePath(`${ROUTES.CARS}/${carId}`);
+    revalidatePath(ROUTES.USER);
+
+    return { success: true, message: "" };
+  } catch (error) {
+    console.error("Review mutation error:", error);
+    return { success: false, message: "Network error" };
+  }
+};
+
+export const createReviewAction = async (
+  carId: string,
+  payload: { rating: number; description: string }
+): Promise<ActionResult> => {
+  const result = await reviewMutation("/reviews/add", "POST", carId, {
+    carId,
+    ...payload,
+  });
+
+  return result.success ? { ...result, message: "Review added" } : result;
+};
+
+export const updateReviewAction = async (
+  reviewId: string,
+  carId: string,
+  payload: { rating: number; description: string }
+): Promise<ActionResult> => {
+  const result = await reviewMutation(
+    `/reviews/${reviewId}`,
+    "PATCH",
+    carId,
+    { carId, ...payload }
+  );
+
+  return result.success ? { ...result, message: "Review updated" } : result;
+};
+
+export const deleteReviewAction = async (
+  reviewId: string,
+  carId: string
+): Promise<ActionResult> => {
+  const result = await reviewMutation(`/reviews/${reviewId}`, "DELETE", carId);
+
+  return result.success ? { ...result, message: "Review deleted" } : result;
+};
+
 export const cancelReservationAction = async (
   id: string
 ): Promise<ActionResult> => {
