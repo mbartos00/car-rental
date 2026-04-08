@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from 'src/db/prisma.service';
 import { CarQuerySchema } from 'src/shared/types';
 import {
@@ -105,6 +105,106 @@ export class CarsService {
         where: { id },
       });
     });
+  }
+
+  async getPopularCars(limit: number) {
+    const [reservationCounts, cars, ratings] = await Promise.all([
+      this.prismaService.reservation.groupBy({
+        by: ['carId'],
+        _count: true,
+        where: { status: { not: ReservationStatus.CANCELLED } },
+      }),
+      this.prismaService.car.findMany(),
+      this.getAverageRatings(),
+    ]);
+
+    const reservedCounts = new Map(
+      reservationCounts.map((entry) => [entry.carId, entry._count]),
+    );
+
+    return cars
+      .map((car) => ({
+        car,
+        score:
+          (reservedCounts.get(car.id) ?? 0) * 3 + car.favouritesListIds.length,
+      }))
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          (ratings.get(b.car.id) ?? 0) - (ratings.get(a.car.id) ?? 0) ||
+          b.car.createdAt.getTime() - a.car.createdAt.getTime(),
+      )
+      .slice(0, limit)
+      .map(({ car }) => car);
+  }
+
+  async getRecommendedCars(userId: string | null, limit: number) {
+    const [cars, ratings] = await Promise.all([
+      this.prismaService.car.findMany(),
+      this.getAverageRatings(),
+    ]);
+
+    const topRated = () =>
+      [...cars]
+        .sort((a, b) => (ratings.get(b.id) ?? 0) - (ratings.get(a.id) ?? 0))
+        .slice(0, limit);
+
+    if (!userId) return topRated();
+
+    const [favouritesList, reservations] = await Promise.all([
+      this.prismaService.favouritesList.findUnique({
+        where: { userId },
+        include: { cars: true },
+      }),
+      this.prismaService.reservation.findMany({
+        where: { userId },
+        include: { car: true },
+      }),
+    ]);
+
+    const history = [
+      ...(favouritesList?.cars ?? []),
+      ...reservations.map((reservation) => reservation.car),
+    ];
+
+    if (history.length === 0) return topRated();
+
+    const historyIds = new Set(history.map((car) => car.id));
+    const preferredTypes = new Set(history.map((car) => car.carType));
+    const preferredSeats = new Set(history.map((car) => car.seats));
+    const prices = history.map((car) => car.price);
+    const minPrice = Math.min(...prices) * 0.75;
+    const maxPrice = Math.max(...prices) * 1.25;
+
+    const recommended = cars
+      .filter((car) => !historyIds.has(car.id))
+      .map((car) => ({
+        car,
+        score:
+          (preferredTypes.has(car.carType) ? 2 : 0) +
+          (car.price >= minPrice && car.price <= maxPrice ? 1 : 0) +
+          (preferredSeats.has(car.seats) ? 1 : 0),
+      }))
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          (ratings.get(b.car.id) ?? 0) - (ratings.get(a.car.id) ?? 0),
+      )
+      .slice(0, limit)
+      .map(({ car }) => car);
+
+    return recommended.length > 0 ? recommended : topRated();
+  }
+
+  private async getAverageRatings(): Promise<Map<string, number>> {
+    const grouped = await this.prismaService.review.groupBy({
+      by: ['carId'],
+      _avg: { rating: true },
+    });
+
+    return new Map(
+      grouped.map((entry) => [entry.carId, entry._avg.rating ?? 0]),
+    );
   }
 
   async getCarFilters() {

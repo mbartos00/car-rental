@@ -44,3 +44,7 @@ export const carQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(10),
   search: z.string().optional(),
 });
+
+export const limitQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(20).default(8),
+});

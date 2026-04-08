@@ -2,6 +2,7 @@ import { Prisma, Role, User } from '@prisma/client';
 import { z } from 'zod';
 import {
   carQuerySchema,
+  limitQuerySchema,
   carSchema,
   updateCarSchema,
 } from './schemas/cars.schema';
@@ -64,6 +65,7 @@ export type AuthTokens = {
 export type CarInput = z.infer<typeof carSchema>;
 export type CarUpdateInput = z.infer<typeof updateCarSchema>;
 export type CarQuerySchema = z.infer<typeof carQuerySchema>;
+export type LimitQuery = z.infer<typeof limitQuerySchema>;
 export enum CarQueryParam {
   min_price = 'min_price',
   max_price = 'max_price',
