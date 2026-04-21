@@ -13,11 +13,16 @@ import {
   RegisterUserInput,
 } from "@/types";
 import { REFRESH_TOKEN_COOKIE } from "@/utlis/authCookies";
+import { notFound } from "next/navigation";
 import { cache } from "react";
 import apiFetch from "./apiFetch";
 
 export const getLocations = async (): Promise<Location[]> => {
   const res = await fetch(`${process.env.API_URL}/locations`);
+
+  if (!res.ok) {
+    throw new Error("Failed to load locations");
+  }
 
   return await res.json();
 };
@@ -29,6 +34,10 @@ export const getBookedRanges = async (
     `${process.env.API_URL}/reservations/car/${carId}`,
     { cache: "no-store" }
   );
+
+  if (!res.ok) {
+    throw new Error("Failed to load booked dates");
+  }
 
   return await res.json();
 };
@@ -103,6 +112,10 @@ export const getRecommendedCars = async (limit = 8): Promise<Car[]> => {
 export const getCarFilters = async (): Promise<CarFilters> => {
   const res = await fetch(`${process.env.API_URL}/cars/filters`);
 
+  if (!res.ok) {
+    throw new Error("Failed to load car filters");
+  }
+
   return await res.json();
 };
 
@@ -126,11 +139,27 @@ export const getCarsWithParams = async (
     `${process.env.API_URL}/cars?${searchParams.toString()}&limit=${limit}`
   );
 
+  if (!res.ok) {
+    throw new Error("Failed to load cars");
+  }
+
   return await res.json();
 };
 
 export const getCar = async (id: string): Promise<Car> => {
+  if (!/^[a-f\d]{24}$/i.test(id)) {
+    notFound();
+  }
+
   const res = await fetch(`${process.env.API_URL}/cars/${id}`);
+
+  if (res.status === 404) {
+    notFound();
+  }
+
+  if (!res.ok) {
+    throw new Error("Failed to load the car");
+  }
 
   return await res.json();
 };
