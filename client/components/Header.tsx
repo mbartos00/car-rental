@@ -2,6 +2,7 @@ import { getSession } from "@/api/session";
 import { ROUTES } from "@/constants/routes";
 import { User } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import FavouritesHeartLink from "./FavouritesHeartLink";
 import LoginLink from "./LoginLink";
 import LogoutButton from "./LogoutButton";
@@ -19,7 +20,9 @@ const Header = async () => {
           MORENT
         </Link>
 
-        <Searchbar className="col-start-1 row-start-2 col-span-5 lg:col-start-2 lg:row-start-1 lg:col-span-5" />
+        <Suspense>
+          <Searchbar className="col-start-1 row-start-2 col-span-5 lg:col-start-2 lg:row-start-1 lg:col-span-5" />
+        </Suspense>
 
         <div className="w-fit col-start-3 col-span-3 justify-self-end flex items-center gap-1 lg:col-start-7 lg:row-start-1">
           {isLoggedIn && <FavouritesHeartLink />}

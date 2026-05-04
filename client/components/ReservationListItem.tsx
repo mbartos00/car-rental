@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity -- request-time cutoffs in a server component */
 import { cn, formatDate, formatPriceToUSD } from "@/lib/utils";
 import { Reservation } from "@/types";
 import Image from "next/image";

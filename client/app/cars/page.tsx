@@ -4,6 +4,8 @@ import CarCard from "@/components/CarCard";
 import CarFilters from "@/components/CarFilters";
 import CarPagination from "@/components/CarPagination";
 
+export const dynamic = "force-dynamic";
+
 const DEFAULT_PAGE_SIZE = 9;
 
 export default async function Cars({
