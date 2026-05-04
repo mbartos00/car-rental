@@ -364,11 +364,11 @@ describe('CarsService', () => {
 
     beforeEach(() => {
       prismaMock.car.findMany.mockResolvedValue([carA, carB, carC] as never);
-      prismaMock.review.groupBy.mockResolvedValue([] as never);
+      (prismaMock.review.groupBy as jest.Mock).mockResolvedValue([] as never);
     });
 
     it('should rank reservations above favourites', async () => {
-      prismaMock.reservation.groupBy.mockResolvedValue([
+      (prismaMock.reservation.groupBy as jest.Mock).mockResolvedValue([
         { carId: 'carA', _count: 1 },
       ] as never);
 
@@ -378,7 +378,7 @@ describe('CarsService', () => {
     });
 
     it('should respect the limit', async () => {
-      prismaMock.reservation.groupBy.mockResolvedValue([] as never);
+      (prismaMock.reservation.groupBy as jest.Mock).mockResolvedValue([] as never);
 
       const result = await carsService.getPopularCars(2);
 
@@ -418,7 +418,7 @@ describe('CarsService', () => {
         sedanSimilar,
         expensiveSuv,
       ] as never);
-      prismaMock.review.groupBy.mockResolvedValue([
+      (prismaMock.review.groupBy as jest.Mock).mockResolvedValue([
         { carId: 'suv1', _avg: { rating: 5 } },
       ] as never);
     });

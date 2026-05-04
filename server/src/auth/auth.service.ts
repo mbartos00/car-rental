@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import type { StringValue } from 'ms';
 import { PrismaService } from 'src/db/prisma.service';
 import { JwtPayload, LoginInput } from 'src/shared/types';
 import { UsersService } from 'src/users/users.service';
@@ -82,7 +83,7 @@ export class AuthService {
         { sub: payload.sub, email: payload.email, role: payload.role },
         {
           secret: process.env.JWT_SECRET,
-          expiresIn: process.env.JWT_EXPIRES_IN,
+          expiresIn: process.env.JWT_EXPIRES_IN as StringValue,
         },
       );
 
@@ -102,11 +103,11 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
-        expiresIn: process.env.JWT_EXPIRES_IN,
+        expiresIn: process.env.JWT_EXPIRES_IN as StringValue,
       }),
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN as StringValue,
       }),
     ]);
 

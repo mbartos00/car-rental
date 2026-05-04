@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient, Role, User } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import bcrypt = require('bcrypt');
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from 'src/db/prisma.service';
 import { UserWithoutPassword } from 'src/shared/types';
