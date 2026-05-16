@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -7,12 +6,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 import type { StringValue } from 'ms';
 import { PrismaService } from 'src/db/prisma.service';
 import { JwtPayload, LoginInput } from 'src/shared/types';
 import { UsersService } from 'src/users/users.service';
 
 const SALT_ROUNDS = 10;
+const ROTATION_GRACE_MS = 30 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -35,7 +36,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const { password: _, ...userWithoutPassword } = user;
+    const {
+      password: _password,
+      refreshTokenHash: _hash,
+      prevRefreshTokenHash: _prevHash,
+      refreshRotatedAt: _rotatedAt,
+      ...userWithoutPassword
+    } = user;
 
     return userWithoutPassword;
   }
@@ -63,6 +70,7 @@ export class AuthService {
     );
 
     const tokens = await this.generateTokens(user);
+    await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
 
     return {
       user,
@@ -74,23 +82,69 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     if (!refreshToken) throw new UnauthorizedException();
 
+    let payload: JwtPayload;
     try {
-      const payload: JwtPayload = this.jwtService.verify(refreshToken, {
+      payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET as string,
       });
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
-      const newAccessToken = await this.jwtService.signAsync(
-        { sub: payload.sub, email: payload.email, role: payload.role },
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const presentedHash = this.hashToken(refreshToken);
+
+    if (presentedHash === user.refreshTokenHash) {
+      const tokens = await this.generateTokens({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
+      await this.storeRefreshTokenHash(
+        user.id,
+        tokens.refreshToken,
+        user.refreshTokenHash,
+      );
+
+      return tokens;
+    }
+
+    const withinGrace =
+      user.refreshRotatedAt !== null &&
+      Date.now() - user.refreshRotatedAt.getTime() < ROTATION_GRACE_MS;
+
+    if (presentedHash === user.prevRefreshTokenHash && withinGrace) {
+      const accessToken = await this.jwtService.signAsync(
+        { sub: user.id, email: user.email, role: user.role },
         {
           secret: process.env.JWT_SECRET,
           expiresIn: process.env.JWT_EXPIRES_IN as StringValue,
         },
       );
 
-      return newAccessToken;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      return { accessToken, refreshToken: null };
     }
+
+    await this.revokeRefreshToken(user.id);
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  async revokeRefreshToken(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        refreshTokenHash: null,
+        prevRefreshTokenHash: null,
+        refreshRotatedAt: null,
+      },
+    });
   }
 
   private async generateTokens(user: {
@@ -112,5 +166,24 @@ export class AuthService {
     ]);
 
     return { accessToken, refreshToken };
+  }
+
+  private hashToken(token: string) {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private async storeRefreshTokenHash(
+    userId: string,
+    refreshToken: string,
+    previousHash: string | null = null,
+  ) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        refreshTokenHash: this.hashToken(refreshToken),
+        prevRefreshTokenHash: previousHash,
+        refreshRotatedAt: previousHash ? new Date() : null,
+      },
+    });
   }
 }

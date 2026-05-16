@@ -14,6 +14,13 @@ describe('AuthController', () => {
     register: jest.fn(),
     login: jest.fn(),
     refreshToken: jest.fn(),
+    revokeRefreshToken: jest.fn(),
+  };
+
+  const mockJwtUser = {
+    id: 'user1',
+    email: 'test@example.com',
+    role: Role.USER,
   };
 
   const mockResponse = () => {
@@ -111,31 +118,58 @@ describe('AuthController', () => {
   });
 
   describe('logout', () => {
-    it('should clear the refresh_token cookie and return message', () => {
+    it('should revoke the refresh token, clear the cookie and return message', async () => {
       const res = mockResponse();
 
-      const result = controller.logout(res);
+      const result = await controller.logout(mockJwtUser, res);
 
+      expect(mockAuthService.revokeRefreshToken).toHaveBeenCalledWith('user1');
       expect(res.clearCookie).toHaveBeenCalledWith('refresh_token');
       expect(result).toEqual({ message: 'Logged out' });
     });
   });
 
   describe('refreshAccessToken', () => {
-    it('should return a new access token', async () => {
-      const req = {
-        cookies: {
-          refresh_token: 'refresh-token',
-        },
-      } as unknown as Request;
+    const req = {
+      cookies: {
+        refresh_token: 'refresh-token',
+      },
+    } as unknown as Request;
 
-      mockAuthService.refreshToken.mockResolvedValueOnce('new-access-token');
+    it('should set the rotated refresh cookie and return the access token', async () => {
+      const res = mockResponse();
+      mockAuthService.refreshToken.mockResolvedValueOnce({
+        accessToken: 'new-access-token',
+        refreshToken: 'rotated-refresh-token',
+      });
 
-      const result = await controller.refreshAccessToken(req);
+      const result = await controller.refreshAccessToken(req, res);
 
       expect(mockAuthService.refreshToken).toHaveBeenCalledWith(
         'refresh-token',
       );
+      expect(res.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        'rotated-refresh-token',
+        expect.objectContaining({
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+        }),
+      );
+      expect(result).toEqual({ accessToken: 'new-access-token' });
+    });
+
+    it('should not set a cookie when no rotated token is returned', async () => {
+      const res = mockResponse();
+      mockAuthService.refreshToken.mockResolvedValueOnce({
+        accessToken: 'new-access-token',
+        refreshToken: null,
+      });
+
+      const result = await controller.refreshAccessToken(req, res);
+
+      expect(res.cookie).not.toHaveBeenCalled();
       expect(result).toEqual({ accessToken: 'new-access-token' });
     });
   });

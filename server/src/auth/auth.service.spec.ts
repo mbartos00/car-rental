@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient, Role, User } from '@prisma/client';
 import bcrypt = require('bcrypt');
+import { createHash } from 'crypto';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from 'src/db/prisma.service';
 import { UserWithoutPassword } from 'src/shared/types';
@@ -27,7 +28,13 @@ describe('AuthService', () => {
     password: 'hashedPassword',
     role: Role.USER,
     createdAt: new Date(),
+    refreshTokenHash: null,
+    prevRefreshTokenHash: null,
+    refreshRotatedAt: null,
   };
+
+  const sha256 = (value: string) =>
+    createHash('sha256').update(value).digest('hex');
 
   let hashSpy: jest.SpyInstance;
 
@@ -115,7 +122,13 @@ describe('AuthService', () => {
         'plain',
       );
 
-      const { password: _, ...restOfUser } = mockUser;
+      const {
+        password: _password,
+        refreshTokenHash: _hash,
+        prevRefreshTokenHash: _prevHash,
+        refreshRotatedAt: _rotatedAt,
+        ...restOfUser
+      } = mockUser;
 
       expect(result).toEqual(restOfUser);
     });
@@ -154,6 +167,14 @@ describe('AuthService', () => {
         mockUser.email,
         'plain',
       );
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+        data: {
+          refreshTokenHash: sha256('refreshToken'),
+          prevRefreshTokenHash: null,
+          refreshRotatedAt: null,
+        },
+      });
     });
   });
 
@@ -174,28 +195,86 @@ describe('AuthService', () => {
       );
     });
 
-    it('should return new access token on valid refresh token', async () => {
+    it('should rotate tokens when presented token matches the stored hash', async () => {
       jwtService.verify.mockReturnValueOnce({
         sub: '1',
         email: mockUser.email,
         role: mockUser.role,
       });
-
-      jwtService.signAsync.mockResolvedValueOnce('newAccessToken');
+      prisma.user.findUnique.mockResolvedValueOnce({
+        ...mockUser,
+        refreshTokenHash: sha256('goodToken'),
+      });
+      jwtService.signAsync
+        .mockResolvedValueOnce('newAccessToken')
+        .mockResolvedValueOnce('newRefreshToken');
 
       const result = await authService.refreshToken('goodToken');
 
-      expect(result).toBe('newAccessToken');
+      expect(result).toEqual({
+        accessToken: 'newAccessToken',
+        refreshToken: 'newRefreshToken',
+      });
       expect(jwtService.verify).toHaveBeenCalledWith('goodToken', {
         secret: process.env.JWT_REFRESH_SECRET,
       });
-      expect(jwtService.signAsync).toHaveBeenCalledWith(
-        { sub: '1', email: mockUser.email, role: mockUser.role },
-        {
-          secret: process.env.JWT_SECRET,
-          expiresIn: process.env.JWT_EXPIRES_IN,
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+        data: {
+          refreshTokenHash: sha256('newRefreshToken'),
+          prevRefreshTokenHash: sha256('goodToken'),
+          refreshRotatedAt: expect.any(Date),
         },
+      });
+    });
+
+    it('should return only an access token for the previous token within the grace window', async () => {
+      jwtService.verify.mockReturnValueOnce({
+        sub: '1',
+        email: mockUser.email,
+        role: mockUser.role,
+      });
+      prisma.user.findUnique.mockResolvedValueOnce({
+        ...mockUser,
+        refreshTokenHash: sha256('currentToken'),
+        prevRefreshTokenHash: sha256('previousToken'),
+        refreshRotatedAt: new Date(),
+      });
+      jwtService.signAsync.mockResolvedValueOnce('graceAccessToken');
+
+      const result = await authService.refreshToken('previousToken');
+
+      expect(result).toEqual({
+        accessToken: 'graceAccessToken',
+        refreshToken: null,
+      });
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should revoke the session on token reuse outside the grace window', async () => {
+      jwtService.verify.mockReturnValueOnce({
+        sub: '1',
+        email: mockUser.email,
+        role: mockUser.role,
+      });
+      prisma.user.findUnique.mockResolvedValueOnce({
+        ...mockUser,
+        refreshTokenHash: sha256('currentToken'),
+        prevRefreshTokenHash: sha256('staleToken'),
+        refreshRotatedAt: new Date(Date.now() - 60_000),
+      });
+
+      await expect(authService.refreshToken('staleToken')).rejects.toThrow(
+        UnauthorizedException,
       );
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+        data: {
+          refreshTokenHash: null,
+          prevRefreshTokenHash: null,
+          refreshRotatedAt: null,
+        },
+      });
     });
   });
 });

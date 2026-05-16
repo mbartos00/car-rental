@@ -98,6 +98,10 @@ model User {
   reviews        Review[]
   favouritesList FavouritesList?
   createdAt      DateTime        @default(now())
+
+  refreshTokenHash     String?
+  prevRefreshTokenHash String?
+  refreshRotatedAt     DateTime?
 }
 
 enum Role {

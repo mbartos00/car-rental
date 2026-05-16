@@ -4,7 +4,7 @@ import { PrismaClient, Role, User } from '@prisma/client';
 import bcrypt = require('bcrypt');
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from 'src/db/prisma.service';
-import { UsersService } from './users.service';
+import { SENSITIVE_USER_FIELDS, UsersService } from './users.service';
 
 describe('UsersService', () => {
   let usersService: UsersService;
@@ -21,6 +21,9 @@ describe('UsersService', () => {
       password: 'hashedPassword',
       role: Role.USER,
       createdAt: new Date(),
+      refreshTokenHash: null,
+      prevRefreshTokenHash: null,
+      refreshRotatedAt: null,
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -50,7 +53,7 @@ describe('UsersService', () => {
             create: {},
           },
         },
-        omit: { password: true },
+        omit: SENSITIVE_USER_FIELDS,
       });
     });
   });
@@ -65,7 +68,7 @@ describe('UsersService', () => {
 
       expect(result).toEqual(mockUsers);
       expect(prismaMock.user.findMany).toHaveBeenCalledWith({
-        omit: { password: true },
+        omit: SENSITIVE_USER_FIELDS,
       });
     });
   });
@@ -102,7 +105,7 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
         where: { id: '1' },
-        omit: { password: true },
+        omit: SENSITIVE_USER_FIELDS,
       });
     });
 
@@ -126,7 +129,7 @@ describe('UsersService', () => {
       expect(prismaMock.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
         data: payload,
-        omit: { password: true },
+        omit: SENSITIVE_USER_FIELDS,
       });
     });
 
@@ -147,7 +150,7 @@ describe('UsersService', () => {
       expect(prismaMock.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
         data: { password: 'newHashedPassword' },
-        omit: { password: true },
+        omit: SENSITIVE_USER_FIELDS,
       });
     });
 

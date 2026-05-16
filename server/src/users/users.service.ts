@@ -10,6 +10,13 @@ import { UserWithoutPassword } from 'src/shared/types';
 
 const SALT_ROUNDS = 10;
 
+export const SENSITIVE_USER_FIELDS = {
+  password: true,
+  refreshTokenHash: true,
+  prevRefreshTokenHash: true,
+  refreshRotatedAt: true,
+} as const;
+
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -22,12 +29,12 @@ export class UsersService {
           create: {},
         },
       },
-      omit: { password: true },
+      omit: SENSITIVE_USER_FIELDS,
     });
   }
 
   async getAllUsers(): Promise<UserWithoutPassword[]> {
-    return await this.prisma.user.findMany({ omit: { password: true } });
+    return await this.prisma.user.findMany({ omit: SENSITIVE_USER_FIELDS });
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
@@ -39,9 +46,7 @@ export class UsersService {
   async findOneById(id: string): Promise<UserWithoutPassword | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      omit: {
-        password: true,
-      },
+      omit: SENSITIVE_USER_FIELDS,
     });
 
     if (!user) throw new NotFoundException('User not found');
@@ -71,7 +76,7 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data,
-      omit: { password: true },
+      omit: SENSITIVE_USER_FIELDS,
     });
   }
 

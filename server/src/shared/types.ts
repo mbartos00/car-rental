@@ -30,7 +30,10 @@ declare module 'express' {
   }
 }
 
-export type UserWithoutPassword = Omit<User, 'password'>;
+export type UserWithoutPassword = Omit<
+  User,
+  'password' | 'refreshTokenHash' | 'prevRefreshTokenHash' | 'refreshRotatedAt'
+>;
 
 export type ValidUser = z.infer<typeof userSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
