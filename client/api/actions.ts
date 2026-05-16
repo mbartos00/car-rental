@@ -257,7 +257,7 @@ export const updateReviewAction = async (
     `/reviews/${reviewId}`,
     "PATCH",
     carId,
-    { carId, ...payload }
+    payload
   );
 
   return result.success ? { ...result, message: "Review updated" } : result;
