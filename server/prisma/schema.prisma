@@ -123,4 +123,6 @@ model Review {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String   @db.ObjectId
   createdAt   DateTime @default(now())
+
+  @@unique([userId, carId])
 }

@@ -32,7 +32,6 @@ describe('ReviewsController', () => {
   };
 
   const mockUpdateReviewPayload = {
-    carId: 'car123',
     description: 'Updated review text',
     rating: 4,
   };

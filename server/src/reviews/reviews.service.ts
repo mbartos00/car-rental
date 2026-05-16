@@ -69,7 +69,12 @@ export class ReviewsService {
 
       return prisma.review.update({
         where: { id },
-        data: { ...updateReviewPayload },
+        data: {
+          ...updateReviewPayload,
+          ...(updateReviewPayload.rating !== undefined && {
+            rating: Math.round(updateReviewPayload.rating),
+          }),
+        },
         omit: {
           userId: true,
         },

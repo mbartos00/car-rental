@@ -137,7 +137,6 @@ describe('ReviewsService', () => {
 
       const result = await reviewsService.update('review1', 'user1', {
         rating: 4,
-        carId: 'car1',
       });
 
       expect(result).toEqual({
@@ -149,7 +148,7 @@ describe('ReviewsService', () => {
       });
       expect(prismaMock.review.update).toHaveBeenCalledWith({
         where: { id: 'review1' },
-        data: { rating: 4, carId: 'car1' },
+        data: { rating: 4 },
         omit: {
           userId: true,
         },
@@ -166,7 +165,6 @@ describe('ReviewsService', () => {
       await expect(
         reviewsService.update('review1', 'user1', {
           rating: 4,
-          carId: 'car1',
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -184,7 +182,6 @@ describe('ReviewsService', () => {
       await expect(
         reviewsService.update('review1', 'user1', {
           rating: 4,
-          carId: 'car1',
         }),
       ).rejects.toThrow(ForbiddenException);
     });
