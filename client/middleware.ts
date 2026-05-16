@@ -47,6 +47,14 @@ export async function middleware(request: NextRequest) {
           accessToken: string;
         };
         const newPayload = decodeJwtPayload(newAccessToken);
+        const rotatedRefreshToken = res.headers
+          .getSetCookie()
+          .find((cookie) => cookie.startsWith(`${REFRESH_TOKEN_COOKIE}=`))
+          ?.split(";")[0]
+          .slice(REFRESH_TOKEN_COOKIE.length + 1);
+        const rotatedPayload = rotatedRefreshToken
+          ? decodeJwtPayload(rotatedRefreshToken)
+          : null;
 
         if (newPayload) {
           const requestHeaders = new Headers(request.headers);
@@ -73,6 +81,14 @@ export async function middleware(request: NextRequest) {
             newAccessToken,
             tokenCookieOptions(newPayload.exp)
           );
+
+          if (rotatedRefreshToken && rotatedPayload) {
+            response.cookies.set(
+              REFRESH_TOKEN_COOKIE,
+              rotatedRefreshToken,
+              tokenCookieOptions(rotatedPayload.exp)
+            );
+          }
 
           return response;
         }
