@@ -43,7 +43,7 @@ const CarCard = ({
   const formattedPrice = formatPriceToUSD(price);
 
   return (
-    <Card className="border-none transition-opacity has-[[data-pending]]:opacity-60 has-[[data-pending]]:pointer-events-none">
+    <Card className="h-full border-none transition-opacity has-[[data-pending]]:opacity-60 has-[[data-pending]]:pointer-events-none">
       <CardHeader>
         <CardTitle className="text-secondary-500 font-semibold text-base lg:font-bold lg:text-xl">
           {name}
@@ -90,7 +90,7 @@ const CarCard = ({
           </p>
         </div>
       </CardContent>
-      <CardFooter className="justify-between gap-2">
+      <CardFooter className="mt-auto justify-between gap-2">
         <p className="text-secondary-500 font-bold whitespace-nowrap">
           {formattedPrice}/
           <span className="text-xs text-secondary-300">day</span>

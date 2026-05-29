@@ -20,7 +20,7 @@ const RecommendedCars = async () => {
       <h3 className="text-sm lg:text-base font-semibold text-secondary-300 mb-5">
         Recommended Cars
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
         {cars.map((car) => (
           <CarCard
             id={car.id}
