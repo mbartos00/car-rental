@@ -188,6 +188,36 @@ export type Location = {
   name: string;
 };
 
+export type PromoCode = {
+  id: string;
+  code: string;
+  discountPercent: number;
+  active: boolean;
+  createdAt: string;
+};
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  createdAt: string;
+};
+
+export type AdminReservation = Reservation & {
+  user: AdminUser;
+};
+
+export type ReservationStats = {
+  totalRevenue: number;
+  totalReservations: number;
+  totalCars: number;
+  totalUsers: number;
+  byCarType: { carType: CarType; count: number }[];
+  recent: (Reservation & { user: AdminUser })[];
+};
+
 export type BookedRange = {
   startDate: string;
   endDate: string;

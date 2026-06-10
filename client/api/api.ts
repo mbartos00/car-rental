@@ -1,4 +1,6 @@
 import {
+  AdminReservation,
+  AdminUser,
   BookedRange,
   Car,
   CarFilters,
@@ -8,7 +10,9 @@ import {
   LoginUserInput,
   Pagination,
   Profile,
+  PromoCode,
   Reservation,
+  ReservationStats,
   RegisterFormState,
   RegisterUserInput,
 } from "@/types";
@@ -51,6 +55,79 @@ export const getMyReservations = async (): Promise<Reservation[] | null> => {
     return await res.json();
   } catch (error) {
     console.error("Reservations fetch error:", error);
+    return null;
+  }
+};
+
+export const getAllCars = async (): Promise<Car[]> => {
+  const res = await fetch(
+    `${process.env.API_URL}/cars?limit=100&sort_by=name&sort_order=asc`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to load cars");
+  }
+
+  const { data } = await res.json();
+  return data;
+};
+
+export const getAdminReservations = async (
+  page = 1,
+  status?: string
+): Promise<{ data: AdminReservation[]; pagination: Pagination } | null> => {
+  try {
+    const params = new URLSearchParams({ page: String(page), limit: "10" });
+    if (status) params.set("status", status);
+
+    const res = await apiFetch(`/reservations/all?${params.toString()}`);
+
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (error) {
+    console.error("Admin reservations fetch error:", error);
+    return null;
+  }
+};
+
+export const getReservationStats =
+  async (): Promise<ReservationStats | null> => {
+    try {
+      const res = await apiFetch("/reservations/stats");
+
+      if (!res.ok) return null;
+
+      return await res.json();
+    } catch (error) {
+      console.error("Reservation stats fetch error:", error);
+      return null;
+    }
+  };
+
+export const getAllUsers = async (): Promise<AdminUser[] | null> => {
+  try {
+    const res = await apiFetch("/users");
+
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (error) {
+    console.error("Users fetch error:", error);
+    return null;
+  }
+};
+
+export const getPromoCodes = async (): Promise<PromoCode[] | null> => {
+  try {
+    const res = await apiFetch("/promo-codes");
+
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (error) {
+    console.error("Promo codes fetch error:", error);
     return null;
   }
 };
