@@ -13,6 +13,9 @@ const isProtectedPath = (pathname: string) =>
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
+const isAdminPath = (pathname: string) =>
+  pathname === ROUTES.ADMIN || pathname.startsWith(`${ROUTES.ADMIN}/`);
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
@@ -28,6 +31,10 @@ export async function middleware(request: NextRequest) {
 
   if (isAccessTokenValid) {
     if (isAuthRoute) {
+      return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
+    }
+
+    if (isAdminPath(pathname) && payload.role !== "ADMIN") {
       return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
     }
 
@@ -71,7 +78,10 @@ export async function middleware(request: NextRequest) {
             )
           );
 
-          const response = isAuthRoute
+          const shouldBounceHome =
+            isAuthRoute ||
+            (isAdminPath(pathname) && newPayload.role !== "ADMIN");
+          const response = shouldBounceHome
             ? NextResponse.redirect(new URL(ROUTES.HOME, request.url))
             : NextResponse.next({
                 request: { headers: requestHeaders },
