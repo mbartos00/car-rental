@@ -344,6 +344,206 @@ describe('ReservationsService', () => {
     });
   });
 
+  describe('findAll', () => {
+    it('should return a paginated list with includes', async () => {
+      const rows = [{ id: 'res1' }, { id: 'res2' }];
+      prismaMock.$transaction.mockResolvedValueOnce([rows, 12] as never);
+
+      const result = await service.findAll({ page: 2, limit: 2 });
+
+      expect(result).toEqual({
+        data: rows,
+        pagination: {
+          page: 2,
+          limit: 2,
+          total: 12,
+          totalPages: 6,
+          hasNext: true,
+          hasPrev: true,
+        },
+      });
+      expect(prismaMock.reservation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {},
+          orderBy: { createdAt: 'desc' },
+          skip: 2,
+          take: 2,
+        }),
+      );
+    });
+
+    it('should filter by status when provided', async () => {
+      prismaMock.$transaction.mockResolvedValueOnce([[], 0] as never);
+
+      await service.findAll({ page: 1, limit: 10, status: 'CANCELLED' });
+
+      expect(prismaMock.reservation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { status: 'CANCELLED' } }),
+      );
+      expect(prismaMock.reservation.count).toHaveBeenCalledWith({
+        where: { status: 'CANCELLED' },
+      });
+    });
+  });
+
+  describe('getStats', () => {
+    it('should aggregate revenue, counts, car types and recent reservations', async () => {
+      prismaMock.reservation.aggregate.mockResolvedValue({
+        _sum: { totalPrice: 1500 },
+      } as never);
+      prismaMock.reservation.count.mockResolvedValue(7);
+      prismaMock.car.count.mockResolvedValue(10);
+      prismaMock.user.count.mockResolvedValue(5);
+      prismaMock.reservation.findMany
+        .mockResolvedValueOnce([
+          { car: { carType: 'SEDAN' } },
+          { car: { carType: 'SEDAN' } },
+          { car: { carType: 'SUV' } },
+        ] as never)
+        .mockResolvedValueOnce([{ id: 'res1' }] as never);
+
+      const result = await service.getStats();
+
+      expect(result).toEqual({
+        totalRevenue: 1500,
+        totalReservations: 7,
+        totalCars: 10,
+        totalUsers: 5,
+        byCarType: expect.arrayContaining([
+          { carType: 'SEDAN', count: 2 },
+          { carType: 'SUV', count: 1 },
+        ]),
+        recent: [{ id: 'res1' }],
+      });
+    });
+
+    it('should return zero revenue when there are no confirmed reservations', async () => {
+      prismaMock.reservation.aggregate.mockResolvedValue({
+        _sum: { totalPrice: null },
+      } as never);
+      prismaMock.reservation.count.mockResolvedValue(0);
+      prismaMock.car.count.mockResolvedValue(0);
+      prismaMock.user.count.mockResolvedValue(0);
+      prismaMock.reservation.findMany.mockResolvedValue([] as never);
+
+      const result = await service.getStats();
+
+      expect(result.totalRevenue).toBe(0);
+      expect(result.byCarType).toEqual([]);
+    });
+  });
+
+  describe('updateBilling', () => {
+    const billingInfo = {
+      name: 'Jane Doe',
+      phoneNumber: '+48987654321',
+      address: 'Long Street 5',
+      city: 'Gotham',
+    };
+
+    it('should update the billing info', async () => {
+      prismaMock.reservation.findUnique.mockResolvedValue({
+        id: 'res1',
+      } as never);
+      prismaMock.reservation.update.mockResolvedValue({
+        id: 'res1',
+        billingInfo,
+      } as never);
+
+      const result = await service.updateBilling('res1', billingInfo);
+
+      expect(prismaMock.reservation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'res1' },
+          data: { billingInfo },
+        }),
+      );
+      expect(result).toEqual(expect.objectContaining({ billingInfo }));
+    });
+
+    it('should throw NotFoundException for a missing reservation', async () => {
+      prismaMock.reservation.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateBilling('missing', billingInfo),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('adminCancel', () => {
+    const reservation = {
+      id: 'res1',
+      userId: 'someone-else',
+      status: 'CONFIRMED',
+      startDate: new Date(Date.now() + 1 * MS_PER_DAY),
+      paymentIntentId: 'pi_123',
+    };
+
+    it('should refund and cancel regardless of owner and cancellation window', async () => {
+      prismaMock.reservation.findUnique.mockResolvedValue(reservation as never);
+      prismaMock.reservation.update.mockResolvedValue({
+        ...reservation,
+        status: 'CANCELLED',
+      } as never);
+
+      const result = await service.adminCancel('res1');
+
+      expect(stripeMock.refunds.create).toHaveBeenCalledWith({
+        payment_intent: 'pi_123',
+      });
+      expect(result).toEqual(expect.objectContaining({ status: 'CANCELLED' }));
+    });
+
+    it('should still cancel when the payment intent does not exist in Stripe', async () => {
+      prismaMock.reservation.findUnique.mockResolvedValue(reservation as never);
+      prismaMock.reservation.update.mockResolvedValue({
+        ...reservation,
+        status: 'CANCELLED',
+      } as never);
+      const missingError = new Stripe.errors.StripeInvalidRequestError({
+        type: 'invalid_request_error',
+        code: 'resource_missing',
+      } as never);
+      stripeMock.refunds.create.mockRejectedValue(missingError);
+
+      const result = await service.adminCancel('res1');
+
+      expect(result).toEqual(expect.objectContaining({ status: 'CANCELLED' }));
+    });
+
+    it('should rethrow other Stripe errors without cancelling', async () => {
+      prismaMock.reservation.findUnique.mockResolvedValue(reservation as never);
+      const otherError = new Stripe.errors.StripeInvalidRequestError({
+        type: 'invalid_request_error',
+        code: 'charge_already_refunded',
+      } as never);
+      stripeMock.refunds.create.mockRejectedValue(otherError);
+
+      await expect(service.adminCancel('res1')).rejects.toThrow(otherError);
+      expect(prismaMock.reservation.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException for a missing reservation', async () => {
+      prismaMock.reservation.findUnique.mockResolvedValue(null);
+
+      await expect(service.adminCancel('missing')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw ConflictException when already cancelled', async () => {
+      prismaMock.reservation.findUnique.mockResolvedValue({
+        ...reservation,
+        status: 'CANCELLED',
+      } as never);
+
+      await expect(service.adminCancel('res1')).rejects.toThrow(
+        ConflictException,
+      );
+      expect(stripeMock.refunds.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('getBookedRanges', () => {
     it('should return future non-cancelled ranges', async () => {
       const ranges = [{ startDate, endDate }];

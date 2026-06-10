@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   Car,
@@ -323,6 +323,9 @@ describe('CarsService', () => {
             findUnique: jest.fn().mockResolvedValue(mockCar),
             delete: prismaMock.car.delete,
           },
+          reservation: {
+            count: jest.fn().mockResolvedValue(0),
+          },
         } as any);
       });
       prismaMock.car.delete.mockResolvedValue(mockCar);
@@ -333,6 +336,23 @@ describe('CarsService', () => {
       expect(prismaMock.car.delete).toHaveBeenCalledWith({
         where: { id: '1' },
       });
+    });
+
+    it('should throw ConflictException when the car has upcoming reservations', async () => {
+      prismaMock.$transaction.mockImplementation(async (cb) => {
+        return cb({
+          car: {
+            findUnique: jest.fn().mockResolvedValue(mockCar),
+            delete: prismaMock.car.delete,
+          },
+          reservation: {
+            count: jest.fn().mockResolvedValue(2),
+          },
+        } as any);
+      });
+
+      await expect(carsService.remove('1')).rejects.toThrow(ConflictException);
+      expect(prismaMock.car.delete).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when car not found in transaction', async () => {
@@ -378,7 +398,9 @@ describe('CarsService', () => {
     });
 
     it('should respect the limit', async () => {
-      (prismaMock.reservation.groupBy as jest.Mock).mockResolvedValue([] as never);
+      (prismaMock.reservation.groupBy as jest.Mock).mockResolvedValue(
+        [] as never,
+      );
 
       const result = await carsService.getPopularCars(2);
 

@@ -34,6 +34,19 @@ describe('PromoCodesService', () => {
     jest.clearAllMocks();
   });
 
+  describe('findAll', () => {
+    it('should return all promo codes newest first', async () => {
+      prismaMock.promoCode.findMany.mockResolvedValue([mockPromo]);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual([mockPromo]);
+      expect(prismaMock.promoCode.findMany).toHaveBeenCalledWith({
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+  });
+
   describe('validate', () => {
     it('should return the discount for an active code', async () => {
       prismaMock.promoCode.findUnique.mockResolvedValue(mockPromo);

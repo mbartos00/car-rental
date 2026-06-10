@@ -39,6 +39,13 @@ export class PromoCodesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
+  @Get()
+  findAll() {
+    return this.promoCodesService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Post()
   create(@Body(new ZodPipe(promoCodeSchema)) payload: PromoCodeSchema) {
     return this.promoCodesService.create(payload);

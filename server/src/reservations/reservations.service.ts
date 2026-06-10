@@ -10,10 +10,17 @@ import { Prisma, ReservationStatus } from '@prisma/client';
 import Stripe from 'stripe';
 import { PrismaService } from 'src/db/prisma.service';
 import {
+  AdminReservationsQuery,
+  BillingDetailsSchema,
   CreateReservationSchema,
   JwtUser,
   PaymentIntentSchema,
 } from 'src/shared/types';
+import {
+  buildPagination,
+  buildPaginatedResponse,
+} from 'src/shared/utils/pagination';
+import { SENSITIVE_USER_FIELDS } from 'src/users/users.service';
 import { STRIPE_CLIENT } from './stripe.provider';
 import { calculateReservationPrice } from './utils/reservation-pricing';
 
@@ -208,6 +215,121 @@ export class ReservationsService {
     await this.stripe.refunds.create({
       payment_intent: reservation.paymentIntentId,
     });
+
+    return this.prismaService.reservation.update({
+      where: { id },
+      data: { status: ReservationStatus.CANCELLED },
+      omit: { userId: true },
+    });
+  }
+
+  async findAll(query: AdminReservationsQuery) {
+    const where = query.status ? { status: query.status } : {};
+    const { skip, take } = buildPagination(query.page, query.limit);
+
+    const [reservations, total] = await this.prismaService.$transaction([
+      this.prismaService.reservation.findMany({
+        where,
+        include: {
+          car: true,
+          user: { omit: SENSITIVE_USER_FIELDS },
+          pickupLocation: true,
+          dropoffLocation: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      this.prismaService.reservation.count({ where }),
+    ]);
+
+    return buildPaginatedResponse(reservations, total, query.page, query.limit);
+  }
+
+  async getStats() {
+    const [revenue, totalReservations, totalCars, totalUsers, byCar, recent] =
+      await Promise.all([
+        this.prismaService.reservation.aggregate({
+          where: { status: ReservationStatus.CONFIRMED },
+          _sum: { totalPrice: true },
+        }),
+        this.prismaService.reservation.count(),
+        this.prismaService.car.count(),
+        this.prismaService.user.count(),
+        this.prismaService.reservation.findMany({
+          where: { status: ReservationStatus.CONFIRMED },
+          select: { car: { select: { carType: true } } },
+        }),
+        this.prismaService.reservation.findMany({
+          include: {
+            car: true,
+            user: { omit: SENSITIVE_USER_FIELDS },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        }),
+      ]);
+
+    const byCarType: Record<string, number> = {};
+    for (const reservation of byCar) {
+      byCarType[reservation.car.carType] =
+        (byCarType[reservation.car.carType] ?? 0) + 1;
+    }
+
+    return {
+      totalRevenue: revenue._sum.totalPrice ?? 0,
+      totalReservations,
+      totalCars,
+      totalUsers,
+      byCarType: Object.entries(byCarType).map(([carType, count]) => ({
+        carType,
+        count,
+      })),
+      recent,
+    };
+  }
+
+  async updateBilling(id: string, billingInfo: BillingDetailsSchema) {
+    const reservation = await this.prismaService.reservation.findUnique({
+      where: { id },
+    });
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    return this.prismaService.reservation.update({
+      where: { id },
+      data: { billingInfo },
+      omit: { userId: true },
+    });
+  }
+
+  async adminCancel(id: string) {
+    const reservation = await this.prismaService.reservation.findUnique({
+      where: { id },
+    });
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    if (reservation.status === ReservationStatus.CANCELLED) {
+      throw new ConflictException('Reservation is already cancelled');
+    }
+
+    try {
+      await this.stripe.refunds.create({
+        payment_intent: reservation.paymentIntentId,
+      });
+    } catch (error) {
+      if (!(
+        error instanceof Stripe.errors.StripeInvalidRequestError &&
+        error.code === 'resource_missing'
+      )) {
+        throw error;
+      }
+    }
 
     return this.prismaService.reservation.update({
       where: { id },

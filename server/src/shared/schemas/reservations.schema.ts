@@ -1,3 +1,4 @@
+import { ReservationStatus } from '@prisma/client';
 import { z } from 'zod';
 
 const objectId = z
@@ -26,6 +27,12 @@ const hasValidDates = (data: { startDate: Date; endDate: Date }) =>
 export const paymentIntentSchema = reservationBaseSchema.refine(hasValidDates, {
   path: ['endDate'],
   message: 'Invalid reservation dates',
+});
+
+export const adminReservationsQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
+  status: z.enum(ReservationStatus).optional(),
 });
 
 export const createReservationSchema = reservationBaseSchema

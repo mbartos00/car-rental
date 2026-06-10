@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from 'src/db/prisma.service';
 import { CarQuerySchema } from 'src/shared/types';
@@ -101,6 +105,20 @@ export class CarsService {
 
       if (!car) {
         throw new NotFoundException('Car not found');
+      }
+
+      const upcomingReservations = await prisma.reservation.count({
+        where: {
+          carId: id,
+          status: ReservationStatus.CONFIRMED,
+          endDate: { gt: new Date() },
+        },
+      });
+
+      if (upcomingReservations > 0) {
+        throw new ConflictException(
+          'Car has active or upcoming reservations and cannot be deleted',
+        );
       }
 
       return await prisma.car.delete({

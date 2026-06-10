@@ -37,6 +37,10 @@ describe('ReservationsController', () => {
             create: jest.fn(),
             getBookedRanges: jest.fn(),
             findMine: jest.fn(),
+            findAll: jest.fn(),
+            getStats: jest.fn(),
+            updateBilling: jest.fn(),
+            adminCancel: jest.fn(),
           },
         },
       ],
@@ -103,5 +107,51 @@ describe('ReservationsController', () => {
 
     expect(result).toEqual([]);
     expect(service.findMine).toHaveBeenCalledWith(mockUser.id);
+  });
+
+  it('should delegate the admin list with query params', async () => {
+    const paginated = { data: [], pagination: { page: 1 } };
+    service.findAll.mockResolvedValue(paginated as never);
+
+    const result = await controller.findAll({ page: 1, limit: 10 });
+
+    expect(result).toEqual(paginated);
+    expect(service.findAll).toHaveBeenCalledWith({ page: 1, limit: 10 });
+  });
+
+  it('should return dashboard stats', async () => {
+    const stats = { totalRevenue: 100 };
+    service.getStats.mockResolvedValue(stats as never);
+
+    const result = await controller.getStats();
+
+    expect(result).toEqual(stats);
+  });
+
+  it('should delegate billing updates', async () => {
+    const billingInfo = {
+      name: 'Jane',
+      phoneNumber: '+48123456780',
+      address: 'Street 2',
+      city: 'City',
+    };
+    service.updateBilling.mockResolvedValue({ id: 'res1' } as never);
+
+    const result = await controller.updateBilling('res1', billingInfo);
+
+    expect(result).toEqual({ id: 'res1' });
+    expect(service.updateBilling).toHaveBeenCalledWith('res1', billingInfo);
+  });
+
+  it('should delegate admin cancellation', async () => {
+    service.adminCancel.mockResolvedValue({
+      id: 'res1',
+      status: 'CANCELLED',
+    } as never);
+
+    const result = await controller.adminCancel('res1');
+
+    expect(result).toEqual({ id: 'res1', status: 'CANCELLED' });
+    expect(service.adminCancel).toHaveBeenCalledWith('res1');
   });
 });

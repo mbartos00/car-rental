@@ -23,6 +23,12 @@ export class PromoCodesService {
     return { valid: true as const, discountPercent: promo.discountPercent };
   }
 
+  async findAll() {
+    return this.prismaService.promoCode.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async create(payload: PromoCodeSchema) {
     try {
       return await this.prismaService.promoCode.create({ data: payload });

@@ -14,6 +14,8 @@ import {
 import { addToFavouritesSchema } from './schemas/favourites.schema';
 import { reviewSchema, updateReviewSchema } from './schemas/reviews.schema';
 import {
+  adminReservationsQuerySchema,
+  billingDetailsSchema,
   createReservationSchema,
   paymentIntentSchema,
 } from './schemas/reservations.schema';
@@ -41,6 +43,10 @@ export type ValidUpdatedUser = z.infer<typeof updateUserSchema>;
 
 export type PaymentIntentSchema = z.infer<typeof paymentIntentSchema>;
 export type CreateReservationSchema = z.infer<typeof createReservationSchema>;
+export type AdminReservationsQuery = z.infer<
+  typeof adminReservationsQuerySchema
+>;
+export type BillingDetailsSchema = z.infer<typeof billingDetailsSchema>;
 export type LocationSchema = z.infer<typeof locationSchema>;
 export type PromoCodeSchema = z.infer<typeof promoCodeSchema>;
 export type UpdatePromoCodeSchema = z.infer<typeof updatePromoCodeSchema>;
