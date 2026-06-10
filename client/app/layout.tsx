@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { getSession } from "@/api/session";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
 import SessionProvider from "@/context/SessionContext";
 import ToastProvider from "@/context/ToastContext";
@@ -33,9 +31,7 @@ export default async function RootLayout({
       >
         <SessionProvider session={session}>
           <ToastProvider>
-            <Header />
             {children}
-            <Footer />
           <Toaster
             toastOptions={{
               classNames: {
