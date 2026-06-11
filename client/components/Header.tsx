@@ -25,6 +25,16 @@ const Header = async () => {
         </Suspense>
 
         <div className="w-fit col-start-3 col-span-3 justify-self-end flex items-center gap-1 lg:col-start-7 lg:row-start-1">
+          {session?.role === "ADMIN" && (
+            <Button size="sm" variant="ghost" asChild className="px-3">
+              <Link
+                href={ROUTES.ADMIN}
+                className="text-sm font-semibold text-primary-500"
+              >
+                Dashboard
+              </Link>
+            </Button>
+          )}
           {isLoggedIn && <FavouritesHeartLink />}
           {isLoggedIn ? (
             <>
