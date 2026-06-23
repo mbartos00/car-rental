@@ -66,32 +66,24 @@ export type Pagination = {
   hasPrev: boolean;
 };
 
-export type LoginFormState = {
-  formErrors?: {
-    email?: string[];
-    password?: string[];
-  };
-  success?: boolean;
+export type AuthActionState = {
+  success: boolean;
   error?: ApiErrorResponse;
-  message?: string;
-};
-
-export type RegisterFormState = {
-  formErrors?: {
-    firstName?: string[];
-    lastName?: string[];
-    email?: string[];
-    password?: string[];
-    repeatPassword?: string[];
-  };
-  error?: ApiErrorResponse;
-  success?: boolean;
   message?: string;
 };
 
 export type RegisterUserInput = z.infer<typeof registerSchema>;
 
 export type LoginUserInput = z.infer<typeof loginSchema>;
+
+export type ProfileUpdateInput = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  oldPassword?: string;
+  password?: string;
+  repeatPassword?: string;
+};
 
 export type ApiErrorResponse = {
   message: string | ZodError;
@@ -273,16 +265,3 @@ export type Profile = {
   createdAt: string;
 };
 
-export type ProfileFormState = {
-  formErrors?: {
-    firstName?: string[];
-    lastName?: string[];
-    email?: string[];
-    oldPassword?: string[];
-    password?: string[];
-    repeatPassword?: string[];
-  };
-  error?: ApiErrorResponse;
-  success?: boolean;
-  message?: string;
-};

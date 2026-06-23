@@ -1,17 +1,15 @@
 "use server";
 
-import { loginSchema } from "@/schemas/loginSchema";
-import { profileSchema } from "@/schemas/profileSchema";
-import { registerSchema } from "@/schemas/registerSchema";
 import {
   ActionResult,
+  AuthActionState,
   FinalizeReservationPayload,
-  LoginFormState,
+  LoginUserInput,
   PaymentIntentPayload,
   PaymentIntentResult,
-  ProfileFormState,
+  ProfileUpdateInput,
   PromoValidationResult,
-  RegisterFormState,
+  RegisterUserInput,
 } from "@/types";
 import {
   ACCESS_TOKEN_COOKIE,
@@ -19,23 +17,15 @@ import {
   tokenCookieOptions,
 } from "@/utlis/authCookies";
 import decodeJwtPayload from "@/utlis/jwt";
-import validateFormFields from "@/utlis/validateFormFields";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { ROUTES } from "@/constants/routes";
 import { loginUser, registerUser } from "./api";
 import apiFetch from "./apiFetch";
 
-export const loginFormAction = async (
-  _: LoginFormState,
-  formData: FormData
-): Promise<LoginFormState> => {
-  const { errors, data } = validateFormFields(loginSchema, formData);
-
-  if (errors) {
-    return { formErrors: errors };
-  }
-
+export const loginAction = async (
+  data: LoginUserInput
+): Promise<AuthActionState> => {
   const result = await loginUser(data);
 
   if (!result.success) {
@@ -90,19 +80,9 @@ export const logoutAction = async (): Promise<void> => {
   cookieStore.delete(REFRESH_TOKEN_COOKIE);
 };
 
-export const updateProfileFormAction = async (
-  _: ProfileFormState,
-  formData: FormData
-): Promise<ProfileFormState> => {
-  const { errors: formErrors, data } = validateFormFields(
-    profileSchema,
-    formData
-  );
-
-  if (formErrors) {
-    return { formErrors, success: false };
-  }
-
+export const updateProfileAction = async (
+  data: ProfileUpdateInput
+): Promise<AuthActionState> => {
   try {
     const res = await apiFetch("/users/me", {
       method: "PATCH",
@@ -356,21 +336,8 @@ export const toggleFavouriteAction = async (
   }
 };
 
-export const registerFormAction = async (
-  _: RegisterFormState,
-  formData: FormData
-): Promise<RegisterFormState> => {
-  const { errors: formErrors, data } = validateFormFields(
-    registerSchema,
-    formData
-  );
-
-  if (formErrors) {
-    return {
-      formErrors,
-      success: false,
-    };
-  }
-
+export const registerAction = async (
+  data: RegisterUserInput
+): Promise<AuthActionState> => {
   return await registerUser(data);
 };

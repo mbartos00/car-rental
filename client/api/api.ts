@@ -13,7 +13,7 @@ import {
   PromoCode,
   Reservation,
   ReservationStats,
-  RegisterFormState,
+  AuthActionState,
   RegisterUserInput,
 } from "@/types";
 import { REFRESH_TOKEN_COOKIE } from "@/utlis/authCookies";
@@ -296,7 +296,7 @@ export const loginUser = async (
 
 export const registerUser = async (
   userData: RegisterUserInput
-): Promise<RegisterFormState> => {
+): Promise<AuthActionState> => {
   try {
     const res = await fetch(`${process.env.API_URL}/auth/register`, {
       method: "POST",
