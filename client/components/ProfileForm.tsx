@@ -1,60 +1,83 @@
 "use client";
-import { updateProfileFormAction } from "@/api/actions";
+import { updateProfileAction } from "@/api/actions";
 import useToastContext from "@/hooks/useToastContext";
-import { Profile, ProfileFormState } from "@/types";
-import Form from "next/form";
-import { useActionState, useEffect } from "react";
-import FormFieldInput from "./FormFieldInput";
+import { profileSchema, ProfileFormValues } from "@/schemas/profileSchema";
+import { Profile, ProfileUpdateInput } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import RhfFieldInput from "./RhfFieldInput";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 
-const initialState: ProfileFormState = {
-  formErrors: {
-    firstName: undefined,
-    lastName: undefined,
-    email: undefined,
-    oldPassword: undefined,
-    password: undefined,
-    repeatPassword: undefined,
-  },
-  success: undefined,
-};
-
 const ProfileForm = ({ profile }: { profile: Profile }) => {
-  const [state, formAction, pending] = useActionState(
-    updateProfileFormAction,
-    initialState
-  );
-
   const { handleToast } = useToastContext();
 
-  useEffect(() => {
-    handleToast(state.success, state.error, state.message);
-  }, [state.success, state.error, state.message, handleToast]);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      oldPassword: "",
+      password: "",
+      repeatPassword: "",
+    },
+  });
+
+  const onSubmit = async (values: ProfileFormValues) => {
+    const payload: ProfileUpdateInput = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+    };
+
+    if (values.oldPassword && values.password) {
+      payload.oldPassword = values.oldPassword;
+      payload.password = values.password;
+      payload.repeatPassword = values.repeatPassword;
+    }
+
+    const result = await updateProfileAction(payload);
+
+    handleToast(result.success, result.error, result.message);
+
+    if (result.success) {
+      reset({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        oldPassword: "",
+        password: "",
+        repeatPassword: "",
+      });
+    }
+  };
 
   return (
-    <Form action={formAction} className="space-y-4">
-      <FormFieldInput
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <RhfFieldInput
         label="First Name"
-        fieldName="firstName"
-        required
-        defaultValue={profile.firstName}
-        errors={state.formErrors?.firstName}
+        id="firstName"
+        error={errors.firstName?.message}
+        {...register("firstName")}
       />
-      <FormFieldInput
+      <RhfFieldInput
         label="Last Name"
-        fieldName="lastName"
-        required
-        defaultValue={profile.lastName}
-        errors={state.formErrors?.lastName}
+        id="lastName"
+        error={errors.lastName?.message}
+        {...register("lastName")}
       />
-      <FormFieldInput
+      <RhfFieldInput
         label="Email"
-        fieldName="email"
-        required
+        id="email"
         type="email"
-        defaultValue={profile.email}
-        errors={state.formErrors?.email}
+        error={errors.email?.message}
+        {...register("email")}
       />
 
       <Separator className="my-6" />
@@ -62,30 +85,33 @@ const ProfileForm = ({ profile }: { profile: Profile }) => {
       <p className="text-sm font-semibold text-secondary-400">
         Change password
       </p>
-      <FormFieldInput
+      <RhfFieldInput
         label="Current password"
-        fieldName="oldPassword"
+        id="oldPassword"
         type="password"
         placeholder="Leave empty to keep your password"
-        errors={state.formErrors?.oldPassword}
+        error={errors.oldPassword?.message}
+        {...register("oldPassword")}
       />
-      <FormFieldInput
+      <RhfFieldInput
         label="New password"
-        fieldName="password"
+        id="password"
         type="password"
-        errors={state.formErrors?.password}
+        error={errors.password?.message}
+        {...register("password")}
       />
-      <FormFieldInput
+      <RhfFieldInput
         label="Repeat new password"
-        fieldName="repeatPassword"
+        id="repeatPassword"
         type="password"
-        errors={state.formErrors?.repeatPassword}
+        error={errors.repeatPassword?.message}
+        {...register("repeatPassword")}
       />
 
-      <Button className="w-full mt-2" type="submit" disabled={pending}>
-        {pending ? "Saving..." : "Save changes"}
+      <Button className="w-full mt-2" type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Saving..." : "Save changes"}
       </Button>
-    </Form>
+    </form>
   );
 };
 
