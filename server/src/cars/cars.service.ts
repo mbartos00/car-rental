@@ -24,8 +24,28 @@ export class CarsService {
   }
 
   async findAll(query: CarQuerySchema) {
-    const { sort_by, sort_order, page, limit, ...filters } = query;
+    const {
+      sort_by,
+      sort_order,
+      page,
+      limit,
+      available_from,
+      available_to,
+      ...filters
+    } = query;
     const where = buildCarFilters(filters);
+
+    if (available_from && available_to) {
+      const bookedCarIds = await this.getBookedCarIds(
+        available_from,
+        available_to,
+      );
+
+      if (bookedCarIds.length > 0) {
+        where.id = { notIn: bookedCarIds };
+      }
+    }
+
     const orderBy = buildSort(sort_by, sort_order);
     const pagination = buildPagination(page, limit);
 
@@ -39,6 +59,20 @@ export class CarsService {
     ]);
 
     return buildPaginatedResponse(cars, totalCars, page, limit);
+  }
+
+  private async getBookedCarIds(startDate: Date, endDate: Date) {
+    const overlapping = await this.prismaService.reservation.findMany({
+      where: {
+        status: { not: ReservationStatus.CANCELLED },
+        startDate: { lt: endDate },
+        endDate: { gt: startDate },
+      },
+      select: { carId: true },
+      distinct: ['carId'],
+    });
+
+    return overlapping.map((reservation) => reservation.carId);
   }
 
   async findOne(id: string) {

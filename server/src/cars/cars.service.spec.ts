@@ -214,6 +214,55 @@ describe('CarsService', () => {
         undefined,
       );
     });
+
+    it('should exclude cars booked in the requested availability range', async () => {
+      const available_from = new Date('2026-09-01');
+      const available_to = new Date('2026-09-05');
+      const availabilityQuery = {
+        sort_by: 'createdAt',
+        sort_order: 'desc',
+        page: 1,
+        limit: 10,
+        available_from,
+        available_to,
+      } as CarQuerySchema;
+
+      (carFilterUtils.buildCarFilters as jest.Mock).mockReturnValue({});
+      (paginationUtils.buildSort as jest.Mock).mockReturnValue({
+        createdAt: 'desc',
+      });
+      (paginationUtils.buildPagination as jest.Mock).mockReturnValue({
+        skip: 0,
+        take: 10,
+      });
+
+      prismaMock.reservation.findMany.mockResolvedValue([
+        { carId: 'booked1' },
+        { carId: 'booked2' },
+      ] as never);
+      prismaMock.car.findMany.mockResolvedValue([]);
+      prismaMock.car.count.mockResolvedValue(0);
+
+      await carsService.findAll(availabilityQuery);
+
+      expect(carFilterUtils.buildCarFilters).toHaveBeenCalledWith({});
+      expect(prismaMock.reservation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            status: { not: 'CANCELLED' },
+            startDate: { lt: available_to },
+            endDate: { gt: available_from },
+          },
+          select: { carId: true },
+          distinct: ['carId'],
+        }),
+      );
+      expect(prismaMock.car.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { notIn: ['booked1', 'booked2'] } },
+        }),
+      );
+    });
   });
 
   describe('findOne', () => {
