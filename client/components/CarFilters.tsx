@@ -12,14 +12,25 @@ import {
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn, formatPriceToUSD, toTitleCase } from "@/lib/utils";
 import { CarFilters as CarFiltersType } from "@/types";
-import { ListFilterPlus } from "lucide-react";
+import { CalendarIcon, ListFilterPlus } from "lucide-react";
 import Form from "next/form";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { Button } from "./ui/button";
+import { Calendar } from "./ui/calendar";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+
+const toISODate = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate()
+  ).padStart(2, "0")}`;
+
+const formatRangeLabel = (date: Date) =>
+  date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 type Props = {
   filters: CarFiltersType;
@@ -73,6 +84,79 @@ const FilterOption = ({
   </div>
 );
 
+const AvailabilityFilter = () => {
+  const searchParams = useSearchParams();
+
+  const initialFrom = searchParams.get("available_from");
+  const initialTo = searchParams.get("available_to");
+
+  const [range, setRange] = useState<DateRange | undefined>(
+    initialFrom && initialTo
+      ? { from: new Date(initialFrom), to: new Date(initialTo) }
+      : undefined
+  );
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const hasRange = !!(range?.from && range?.to);
+
+  return (
+    <FilterSection title="Availability">
+      {hasRange && (
+        <>
+          <input
+            type="hidden"
+            name="available_from"
+            value={toISODate(range!.from!)}
+          />
+          <input
+            type="hidden"
+            name="available_to"
+            value={toISODate(range!.to!)}
+          />
+        </>
+      )}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-start font-medium text-secondary-400"
+          >
+            <CalendarIcon className="size-4 text-secondary-300" />
+            {hasRange
+              ? `${formatRangeLabel(range!.from!)} – ${formatRangeLabel(range!.to!)}`
+              : "Any dates"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="range"
+            selected={range}
+            onSelect={setRange}
+            disabled={{ before: today }}
+            numberOfMonths={1}
+          />
+          {hasRange && (
+            <div className="border-t p-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-secondary-400"
+                onClick={() => setRange(undefined)}
+              >
+                Clear dates
+              </Button>
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+    </FilterSection>
+  );
+};
+
 const CarFilterForm = ({ filters }: { filters: CarFiltersType }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -111,6 +195,8 @@ const CarFilterForm = ({ filters }: { filters: CarFiltersType }) => {
       onReset={resetFilters}
       className="flex flex-col gap-12"
     >
+      <AvailabilityFilter />
+
       <FilterSection title="Type">
         <RadioGroup
           defaultValue={currentType}
