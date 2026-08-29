@@ -118,7 +118,7 @@ Each package needs its own `.env` — copy from the `.env.example` in each folde
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
 
 - **server** — install, `prisma generate`, lint, test, build.
-- **client** — install, lint, typecheck, build.
+- **client** — install, lint, build (`next build` also type-checks).
 - **docker-build** — builds both images to validate the Dockerfiles (no push).
 
 No repository secrets are required for this scope.
