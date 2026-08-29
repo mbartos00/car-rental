@@ -20,6 +20,8 @@ architecture.
 
 ## Demo
 
+https://github.com/user-attachments/assets/069570cc-11ec-4476-a9d0-88526be3e7c8
+
 [![Watch the MORENT walkthrough](client/docs/screenshots/home.png)](client/showcase/recordings/morent-tour.webm)
 
 |                                                                  |                                                                 |
